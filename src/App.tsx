@@ -1,32 +1,46 @@
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import { ISchemaA } from "./api/interfaces/dbSchema";
+import React from "react";
+import RootObject from "./api/interfaces/dbSchema";
+import styles from "./App.module.scss";
 
 function Hello() {
+  const [db, dbSet] = React.useState<RootObject | undefined>(undefined);
   return (
     <div>
-      <div>hellooo222ooa</div>
       <button
         onClick={() => {
-          const data: ISchemaA[] = [
-            { id: 1, name: "Alice" },
-            { id: 2, name: "Bob" },
-          ];
-          window.eapi.writeFile(data);
+          // window.eapi.writeFile(data);
+          window.eapi
+            .dbRead()
+            .then((db) => {
+              if (db.status == "Init 0") {
+                dbSet(db);
+              } else {
+                console.log(db.status);
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+            });
         }}
       >
-        Save something
+        get db
       </button>
       <button
-        onClick={() => {
-          window.eapi.dbRead((data) => {
-            console.log("Got this back from db");
-            console.dir(data);
-          });
+        onClick={async () => {
+          const filePaths = await window.eapi.openDialog();
+          filePaths;
         }}
       >
-        Read something
+        Open Dialog
       </button>
+      {db &&
+        db.adb?.map((record) => (
+          <div className={styles.MyDiv} key={record.id}>
+            {record.id}
+          </div>
+        ))}
     </div>
   );
 }

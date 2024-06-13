@@ -1,15 +1,9 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import dbq from "./api/db/dbq";
 // eslint-disable-next-line import/no-unresolved
 // import { writeFile } from "original-fs";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
-
-import * as path from "path";
-import readFromJsonlFile from "./api/db/read";
-import { ISchemaA } from "./api/interfaces/dbSchema";
-import writeToJsonlFile from "./api/db/write";
-
-// import { ISchemaA } from "./api/interfaces/dbSchema";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -19,33 +13,43 @@ if (require("electron-squirrel-startup")) {
 const createWindow = (): void => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    height: 600,
-    width: 800,
+    height: 720,
+    width: 1080,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       contextIsolation: true,
     },
   });
 
+  async function handleFileOpen() {
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow);
+    if (!canceled) {
+      return filePaths;
+    }
+  }
+
   ipcMain.on("set-title", (event, title) => {
     const webContents = event.sender;
     const win = BrowserWindow.fromWebContents(webContents);
-    win.setTitle(title);
+    if (win) win.setTitle(title);
   });
 
-  ipcMain.on("write-file", (event, data: ISchemaA[]) => {
-    writeToJsonlFile(path.join(__dirname, "../../assets/db/data.jsonl"), data)
-      .then(() => console.log("Data written successfully"))
-      .catch((err) => console.error("Error writing data:", err));
+  // ipcMain.on("write-file", (event, data: unknown) => {
+  //   writeToJsonlFile(path.join(__dirname, "../../assets/db/data.jsonl"), data)
+  //     .then(() => console.log("Data written successfully"))
+  //     .catch((err) => console.error("Error writing data:", err));
+  // });
+  const dbO = new dbq();
+
+  ipcMain.on("write-db", (event, db) => {
+    dbO.db = db;
   });
 
-  ipcMain.on("read-db", (event, response: (response: ISchemaA[]) => void) => {
-    console.log(`READING FROM DB..........`);
-    readFromJsonlFile(path.join(__dirname, "../../assets/db/data.jsonl"))
-      .then((data) => {
-        response(data);
-      })
-      .catch((err) => console.error("Error reading data:", err));
+  app.whenReady().then(() => {
+    ipcMain.handle("dialog:openFile", handleFileOpen);
+    ipcMain.handle("read-db", function () {
+      return dbO.db;
+    });
   });
 
   // and load the index.html of the app.

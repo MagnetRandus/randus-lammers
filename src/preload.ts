@@ -1,13 +1,14 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from "electron";
-import { ISchemaA } from "./api/interfaces/dbSchema";
+import IDBStruct from "./api/interfaces/dbSchema";
 
 const eapi = {
   setTitle: (title: string) => ipcRenderer.send("set-title", title),
-  writeFile: (data: ISchemaA[]) => ipcRenderer.send("write-file", data),
-  dbRead: (resolve: (data: ISchemaA[]) => void) =>
-    ipcRenderer.send("read-db", resolve),
+  dbWrite: (data: IDBStruct) => ipcRenderer.send("write-db", data),
+  dbRead: (): Promise<IDBStruct> => ipcRenderer.invoke("read-db"),
+  openDialog: (): Promise<Array<string>> =>
+    ipcRenderer.invoke("dialog:openFile"),
 };
 
 contextBridge.exposeInMainWorld("eapi", eapi);

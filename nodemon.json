@@ -3,7 +3,9 @@
     "node_modules"
   ],
   "watch": [
-    "src/index.ts"
+    "src/index.ts",
+    "src/preload.ts",
+    "src/api/db/validate.ts"
   ],
   "exec": "electron-forge start",
   "ext": "ts"

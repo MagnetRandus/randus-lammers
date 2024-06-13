@@ -1,29 +1,41 @@
-import * as fs from "fs";
-import * as readline from "readline";
-import { ISchemaA } from "../interfaces/dbSchema";
+import Ajv, { JSONSchemaType } from "ajv";
+import addFormats from "ajv-formats";
+import { readFileSync } from "fs";
+import { join } from "path";
+import RootObject from "../interfaces/dbSchema";
 
-const readFromJsonlFile = (filePath: string): Promise<ISchemaA[]> => {
-  return new Promise((resolve, reject) => {
-    const stream = fs.createReadStream(filePath);
-    const rl = readline.createInterface({
-      input: stream,
-      crlfDelay: Infinity,
-    });
+function schemaValidate(): RootObject {
+  const tPath = join(__dirname, "..", "..", "assets", "schemas");
 
-    const data: ISchemaA[] = [];
+  // Load and parse JSON schema
+  const dbSchema: JSONSchemaType<unknown> = JSON.parse(
+    readFileSync(join(tPath, `db.schema.json`), "utf-8")
+  );
+  const bbSchema: JSONSchemaType<unknown> = JSON.parse(
+    readFileSync(join(tPath, `bb.schema.json`), "utf-8")
+  );
 
-    rl.on("line", (line) => {
-      try {
-        data.push(JSON.parse(line));
-      } catch (err) {
-        rl.close();
-        reject(err);
-      }
-    });
+  // Load JSON data
+  const db = JSON.parse(
+    readFileSync(join(tPath, "db", `data.json`), "utf-8")
+  ) as RootObject;
 
-    rl.on("close", () => resolve(data));
-    rl.on("error", reject);
-  });
-};
+  // Validate data against schema
+  const ajv = new Ajv({ allErrors: true, schemas: [dbSchema, bbSchema] });
 
-export default readFromJsonlFile;
+  addFormats(ajv);
+
+  const validate = ajv.compile(dbSchema);
+  const valid = validate(db);
+
+  if (db && valid) {
+    return db;
+  }
+
+  return {
+    status: String(validate.errors),
+    adb: undefined,
+  };
+}
+
+export default schemaValidate;

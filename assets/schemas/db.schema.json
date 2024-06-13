@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "db.schema.json",
+  "title": "lammers",
+  "type": "object",
+  "description": "Define Lammers",
+  "definitions": {
+    "status": {
+      "type": "string"
+    },
+    "adb": {
+      "type": "array",
+      "items": {
+        "$ref": "bb.schema.json#/definitions/bb"
+      },
+      "required": ["status","adb"]
+    }
+  },
+  "properties": {
+    "status": {
+      "$ref": "#/definitions/status"
+    },
+    "adb": {
+      "$ref": "#/definitions/adb"
+    }
+  }
+}
