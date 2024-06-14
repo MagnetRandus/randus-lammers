@@ -5,7 +5,7 @@ import IDBStruct from "./api/interfaces/dbSchema";
 
 const eapi = {
   setTitle: (title: string) => ipcRenderer.send("set-title", title),
-  dbWrite: (data: IDBStruct) => ipcRenderer.send("write-db", data),
+  dbWrite: (db: IDBStruct) => ipcRenderer.send("write-db", db),
   dbRead: (): Promise<IDBStruct> => ipcRenderer.invoke("read-db"),
   openDialog: (): Promise<Array<string>> =>
     ipcRenderer.invoke("dialog:openFile"),

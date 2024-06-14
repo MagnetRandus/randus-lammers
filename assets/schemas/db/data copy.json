@@ -2,25 +2,21 @@
     "status": "Init 0",
     "adb": [
         {
-            "id": 0
-        },
-        {
             "id": 2402,
-            "dateOfBirth": "2023-08-13T16:08:44+02:00"
+            "dateOfBirth": "2023-08-13T16:08:44+02:00",
+            "gender": "Doe"
         },
         {
             "id": 2403,
-            "dateOfBirth": "2023-08-13T16:08:44+02:00"
+            "dateOfBirth": "2023-08-13T16:08:44+02:00",
+            "gender": "Buck"
         },
         {
             "id": 2404,
             "dateOfBirth": "2023-08-13T16:08:44+02:00",
-            "dam": {
-                "id": 2402
-            },
-            "sire": {
-                "id": 2403
-            }
+            "dam": 2402,
+            "sire": 2403,
+            "gender": "Doe"
         }
     ]
 }

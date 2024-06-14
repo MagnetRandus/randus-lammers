@@ -3,11 +3,15 @@ import { createRoot } from "react-dom/client";
 import React from "react";
 import RootObject from "./api/interfaces/dbSchema";
 import styles from "./App.module.scss";
+import BBRender from "./api/ux/bb";
 
-function Hello() {
+function BBok() {
   const [db, dbSet] = React.useState<RootObject | undefined>(undefined);
   return (
     <div>
+      <div className={styles.ControlPanel}>
+        <BBRender inf="abce" />
+      </div>
       <button
         onClick={() => {
           // window.eapi.writeFile(data);
@@ -49,7 +53,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Hello />} />
+        <Route path="/" element={<BBok />} />
       </Routes>
     </Router>
   );

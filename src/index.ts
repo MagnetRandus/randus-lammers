@@ -28,18 +28,13 @@ const createWindow = (): void => {
     }
   }
 
+  const dbO = new dbq();
+
   ipcMain.on("set-title", (event, title) => {
     const webContents = event.sender;
     const win = BrowserWindow.fromWebContents(webContents);
     if (win) win.setTitle(title);
   });
-
-  // ipcMain.on("write-file", (event, data: unknown) => {
-  //   writeToJsonlFile(path.join(__dirname, "../../assets/db/data.jsonl"), data)
-  //     .then(() => console.log("Data written successfully"))
-  //     .catch((err) => console.error("Error writing data:", err));
-  // });
-  const dbO = new dbq();
 
   ipcMain.on("write-db", (event, db) => {
     dbO.db = db;

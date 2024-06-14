@@ -1,17 +1,14 @@
 interface RootObject {
   status: string;
-  adb?: Adb[] | undefined;
+  adb?: IBB[] | undefined;
 }
 
-interface Adb {
+interface IBB {
   id: number;
   dateOfBirth?: string;
-  dam?: Dam;
-  sire?: Dam;
-}
-
-interface Dam {
-  id: number;
+  gender: "Buck" | "Doe";
+  dam?: IBB;
+  sire?: IBB;
 }
 
 export default RootObject;

@@ -55,6 +55,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@fluentui/react": "^8.118.7",
     "ajv": "^8.16.0",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^9.0.0",

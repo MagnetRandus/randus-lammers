@@ -10,20 +10,29 @@ class dbq {
     this.tpath = join(__dirname, "..", "..", "assets", "schemas");
   }
 
-  public get db(): IDBStruct {
-    const v = JSON.parse(
-      readFileSync(join(this.tpath, "db", `data.json`), "utf-8")
-    ) as IDBStruct;
+  public get db(): IDBStruct | undefined {
+    try {
+      const v = JSON.parse(
+        readFileSync(join(this.tpath, "db", `data.json`), "utf-8")
+      ) as IDBStruct;
 
-    return this.validate(v);
+      return this.validate(v);
+    } catch (err) {
+      console.dir(err);
+      return undefined;
+    }
   }
 
-  public set db(v: IDBStruct) {
-    writeFileSync(
-      join(this.tpath, "db", `data.json`),
-      JSON.stringify(this.validate(v)),
-      "utf-8"
-    );
+  public set db(v: IDBStruct | undefined) {
+    if (v) {
+      writeFileSync(
+        join(this.tpath, "db", `data.json`),
+        JSON.stringify(this.validate(v)),
+        "utf-8"
+      );
+    } else {
+      throw new Error(`DB can't be set to undefined`);
+    }
   }
 
   private validate(db: IDBStruct): IDBStruct {

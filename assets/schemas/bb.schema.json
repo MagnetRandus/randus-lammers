@@ -4,9 +4,6 @@
   "title": "bb",
   "type": "object",
   "definitions": {
-    "mof": {
-      "$ref": "#/definitions/bb"
-    },
     "bb": {
       "type": "object",
       "properties": {
@@ -17,15 +14,18 @@
         "dateOfBirth": {
           "type": "string",
           "format": "date-time"
-        },
-        "sire": {
-          "$ref": "#/definitions/mof"
-        },
-        "dam": {
-          "$ref": "#/definitions/mof"
         }
-      },
-      "required": ["id"]
+      }
+    },
+    "gender": {
+      "type": "string",
+      "enum": [
+        "Buck",
+        "Doe"
+      ]
+    },
+    "parent": {
+      "type": "number"
     }
   },
   "properties": {
@@ -38,11 +38,17 @@
       "format": "date-time"
     },
     "sire": {
-      "$ref": "#/definitions/mof"
+      "$ref": "#/definitions/parent"
     },
     "dam": {
-      "$ref": "#/definitions/mof"
+      "$ref": "#/definitions/parent"
+    },
+    "gender": {
+      "$ref": "#/definitions/gender"
     }
   },
-  "required": ["id"]
+  "required": [
+    "id",
+    "gender"
+  ]
 }

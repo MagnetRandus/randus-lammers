@@ -13,7 +13,7 @@
       "items": {
         "$ref": "bb.schema.json#/definitions/bb"
       },
-      "required": ["status","adb"]
+      "nullable": true
     }
   },
   "properties": {
@@ -23,5 +23,9 @@
     "adb": {
       "$ref": "#/definitions/adb"
     }
-  }
+  },
+  "required": [
+    "status",
+    "adb"
+  ]
 }
