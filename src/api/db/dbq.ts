@@ -16,6 +16,8 @@ class dbq {
         readFileSync(join(this.tpath, "db", `data.json`), "utf-8")
       ) as IDBStruct;
 
+      console.log(`READING DB`);
+
       return this.validate(v);
     } catch (err) {
       console.dir(err);
@@ -34,7 +36,6 @@ class dbq {
       throw new Error(`DB can't be set to undefined`);
     }
   }
-
   private validate(db: IDBStruct): IDBStruct {
     const dbSchema: JSONSchemaType<unknown> = JSON.parse(
       readFileSync(join(this.tpath, `db.schema.json`), "utf-8")

@@ -1,12 +1,13 @@
 import React from "react";
 import styles from "./bb.module.scss";
 import BBAdd from "./addbb";
+import { dbCrudOps } from "../dbTalk/rh";
 
-interface IPropsBB {
-  inf: string;
+export interface IPropsBBRender {
+  dbCrudOps: dbCrudOps;
 }
 
-const BBRender: React.FC<IPropsBB> = function () {
+const BBRender: React.FC<IPropsBBRender> = function ({ dbCrudOps }) {
   const [_StockAdding, _SetStockAdding] = React.useState<boolean>(false);
   return (
     <>
@@ -22,7 +23,7 @@ const BBRender: React.FC<IPropsBB> = function () {
       </div>
       {_StockAdding && (
         <div>
-          <BBAdd s="a" />
+          <BBAdd addRecord={dbCrudOps.addRecord} />
         </div>
       )}
     </>

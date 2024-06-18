@@ -8,14 +8,29 @@ import {
   IDatePickerStrings,
   PrimaryButton,
   Stack,
+  registerIcons,
 } from "@fluentui/react";
+import { initializeIcons } from "@fluentui/react/lib/Icons";
+import IIBBForm from "../interfaces/IIBBForm";
+import dbmapIBB from "../dbmap/dbmap-IBB";
+import { TSetRecord } from "../types";
 
-interface BbFormProps {
-  s: string;
+import { CalendarIcon } from "@fluentui/react-icons-mdl2";
+
+interface IPropsBBForm {
+  addRecord: TSetRecord;
 }
 
-const BbForm: React.FC<BbFormProps> = () => {
-  const [formData, setFormData] = useState({
+const BbForm: React.FC<IPropsBBForm> = ({ addRecord }) => {
+  initializeIcons();
+
+  registerIcons({
+    icons: {
+      calender: <CalendarIcon />,
+    },
+  });
+
+  const [formData, setFormData] = useState<IIBBForm>({
     id: "",
     dateOfBirth: undefined as Date | undefined,
     sire: "",
@@ -53,9 +68,12 @@ const BbForm: React.FC<BbFormProps> = () => {
   };
 
   const handleSubmit = () => {
-    // Handle form submission
-    console.log("Form data submitted:", formData);
+    addRecord(dbmapIBB(formData));
   };
+
+  React.useEffect(() => {
+    //;
+  }, []);
 
   return (
     <form>

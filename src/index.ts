@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, session } from "electron";
 import dbq from "./api/db/dbq";
 // eslint-disable-next-line import/no-unresolved
 // import { writeFile } from "original-fs";
@@ -40,7 +40,28 @@ const createWindow = (): void => {
     dbO.db = db;
   });
 
+  /**
+   * https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/assets/fonts/leelawadeeui-thai/leelawadeeui-semilight.woff2
+   * https://res.cdn.office.net/files/fabric-cdn-prod_20240129.001/assets/icons/fabric-icons-a13498cf.woff
+   */
+
   app.whenReady().then(() => {
+    const defaultCPS = `'self' 'unsafe-eval' 'unsafe-inline' http://localhost:* ws://localhost:*`;
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "Content-Security-Policy": [
+            `default-src ${defaultCPS} *`,
+            `font-src ${defaultCPS} *`,
+            `img-src ${defaultCPS} *`,
+            `style-src ${defaultCPS} *`,
+            `font-src ${defaultCPS} *`,
+          ],
+        },
+      });
+    });
+
     ipcMain.handle("dialog:openFile", handleFileOpen);
     ipcMain.handle("read-db", function () {
       return dbO.db;
