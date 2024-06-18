@@ -5,7 +5,8 @@
   "watch": [
     "src/index.ts",
     "src/preload.ts",
-    "src/api/db/validate.ts"
+    "src/api/db/validate.ts",
+    "src/api/db/dbq.ts"
   ],
   "exec": "electron-forge start",
   "ext": "ts"
