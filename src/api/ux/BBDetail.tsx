@@ -13,30 +13,38 @@ import {
 import { initializeIcons } from "@fluentui/react/lib/Icons";
 import IIBBForm from "../interfaces/IIBBForm";
 import dbmapIBB from "../dbmap/dbmap-IBB";
-import { TSetRecord } from "../types";
+import { TSetRecord, TShwRecord } from "../types";
 
 import { CalendarIcon } from "@fluentui/react-icons-mdl2";
 
 interface IPropsBBForm {
   addRecord: TSetRecord;
+  shwRecord: TShwRecord;
+  IdFocus: number;
 }
 
-const BbForm: React.FC<IPropsBBForm> = ({ addRecord }) => {
-  initializeIcons();
-
-  registerIcons({
-    icons: {
-      calender: <CalendarIcon />,
-    },
-  });
-
-  const [formData, setFormData] = useState<IIBBForm>({
+const BBDetail: React.FC<IPropsBBForm> = ({
+  addRecord,
+  shwRecord,
+  IdFocus,
+}) => {
+  const zRec = {
     id: "",
     dateOfBirth: undefined as Date | undefined,
     sire: "",
     dam: "",
     gender: "",
-  });
+  } as IIBBForm;
+
+  if (IdFocus !== 0) {
+    const record = shwRecord(IdFocus);
+    zRec.id = String(record.id);
+    if (record.dateOfBirth) zRec.dateOfBirth = new Date(record.dateOfBirth);
+    zRec.gender = record.gender;
+    if (record.dam) zRec.dam = String(record.dam);
+    if (record.sire) zRec.dam = String(record.sire);
+  }
+  const [formData, setFormData] = useState<IIBBForm>(zRec);
 
   const handleInputChange = (
     event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -72,7 +80,13 @@ const BbForm: React.FC<IPropsBBForm> = ({ addRecord }) => {
   };
 
   React.useEffect(() => {
-    //;
+    initializeIcons();
+
+    registerIcons({
+      icons: {
+        calender: <CalendarIcon />,
+      },
+    });
   }, []);
 
   return (
@@ -121,7 +135,11 @@ const BbForm: React.FC<IPropsBBForm> = ({ addRecord }) => {
           ]}
           required
         />
-        <PrimaryButton onClick={handleSubmit}>Submit</PrimaryButton>
+        {IdFocus === 0 ? (
+          <PrimaryButton onClick={handleSubmit}>Submit</PrimaryButton>
+        ) : (
+          <PrimaryButton onClick={handleSubmit}>Save</PrimaryButton>
+        )}
       </Stack>
     </form>
   );
@@ -177,4 +195,4 @@ const DayPickerStrings: IDatePickerStrings = {
   invalidInputErrorMessage: "Invalid date format.",
 };
 
-export default BbForm;
+export default BBDetail;

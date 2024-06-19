@@ -1,0 +1,11 @@
+@use "ColorScheme.scss" as colors;
+@use "./Themes/ButtonThemes.scss" as buttons;
+@use "./Themes/BoxThemes.scss" as boxTheme;
+
+.ControlPanel {
+    @include boxTheme.box-common();
+}
+
+.ButtonPlain {
+    @include buttons.button-plain();
+}

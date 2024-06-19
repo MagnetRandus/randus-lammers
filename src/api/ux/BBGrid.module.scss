@@ -1,0 +1,7 @@
+@use "ColorScheme.scss" as colors;
+@use "./Themes/ButtonThemes.scss" as buttons;
+@use "./Themes/BoxThemes.scss" as boxTheme;
+
+.BBGrid {
+    @include boxTheme.box-common;
+}

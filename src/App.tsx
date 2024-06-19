@@ -2,9 +2,10 @@ import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import React from "react";
 import styles from "./App.module.scss";
-import BBRender from "./api/ux/bb";
 import RecordHandler, { dbCrudOps } from "./api/dbTalk/rh";
 import { IDBCrudx } from "./api/types";
+import BBRender from "./api/ux/ControlPanel";
+import BBGrid from "./api/ux/BBGrid";
 
 interface IPropsBBok {
   start: boolean;
@@ -12,6 +13,8 @@ interface IPropsBBok {
 
 const BBok: React.FC<IPropsBBok> = ({ start }) => {
   [start];
+
+  const [IdFocus, IdFocusSet] = React.useState<number>(2405);
 
   const [db, setDb] = React.useState<IDBCrudx>(undefined);
   const [rh] = React.useState<RecordHandler>(
@@ -30,18 +33,15 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
   }, [db]);
 
   return (
-    <div>
+    <div className={styles.Main}>
       {db && (
-        <div>
+        <>
           <div className={styles.ControlPanel}>
-            {dbOps && <BBRender dbCrudOps={dbOps} />}
+            {dbOps && <BBRender IdFocus={IdFocus} dbCrudOps={dbOps} />}
           </div>
-          {db.adb?.map((bbRec) => (
-            <div className={styles.MyDiv} key={bbRec.id}>
-              {bbRec.id}
-            </div>
-          ))}
-        </div>
+          <div className={styles.Gap}></div>
+          {db.adb && <BBGrid IdFocusSet={IdFocusSet} data={db.adb} />}
+        </>
       )}
     </div>
   );

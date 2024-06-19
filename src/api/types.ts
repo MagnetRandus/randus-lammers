@@ -14,6 +14,7 @@ export type IBBx = IBB | undefined;
  */
 
 export type TSetRecord = (data: IBB) => void;
+export type TShwRecord = (id: number) => IBB;
 
 /**
  * Other interfaces
