@@ -6,28 +6,97 @@ import {
   DatePicker,
   DayOfWeek,
   IDatePickerStrings,
-  PrimaryButton,
   Stack,
   registerIcons,
+  IStackStyles,
+  IStackTokens,
+  DefaultButton,
+  IIconProps,
 } from "@fluentui/react";
 import { initializeIcons } from "@fluentui/react/lib/Icons";
+import {
+  CalendarIcon,
+  CancelIcon,
+  SaveIcon,
+  SaveAsIcon,
+} from "@fluentui/react-icons-mdl2";
+
+initializeIcons();
+
+registerIcons({
+  icons: {
+    calender: <CalendarIcon />,
+    iconCancel: <CancelIcon />,
+    iconSave: <SaveIcon />,
+    iconUpdate: <SaveAsIcon />,
+  },
+});
 import IIBBForm from "../interfaces/IIBBForm";
 import dbmapIBB from "../dbmap/dbmap-IBB";
-import { TSetRecord, TShwRecord } from "../types";
+import { dbCrudOps } from "../types";
 
-import { CalendarIcon } from "@fluentui/react-icons-mdl2";
+import UXTextInBlock from "./Styles/UXTextInBlock";
 
-interface IPropsBBForm {
-  addRecord: TSetRecord;
-  shwRecord: TShwRecord;
+import styles from "./BBDetail.module.scss";
+import ModalConfirm from "./Components/modal";
+import colorScheme from "./Styles/ColourScheme";
+
+const updateIcon: IIconProps = {
+  iconName: "iconUpdate",
+  styles: { root: { color: colorScheme.coralOrange, fontSize: 20 } }, // Custom styles for the icon
+};
+const saveIcon: IIconProps = {
+  iconName: "iconSave",
+  styles: { root: { color: colorScheme.coralOrange, fontSize: 20 } }, // Custom styles for the icon
+};
+const iconCancel: IIconProps = {
+  iconName: "iconCancel",
+  styles: { root: { color: colorScheme.sageGreen, fontSize: 20 } }, // Custom styles for the icon
+};
+
+const stackStyles: IStackStyles = {
+  root: [
+    {
+      // marginLeft: 10,
+      marginRight: 10,
+      // minHeight: 100,
+      minWidth: 125,
+    },
+  ],
+  inner: {
+    overflow: "hidden",
+  },
+};
+
+const exampleStackTokens: IStackTokens = {
+  childrenGap: 10,
+  padding: 0,
+};
+
+interface IPropsBBForm extends dbCrudOps {
   IdFocus: number;
+  SetAddingStock: React.Dispatch<React.SetStateAction<boolean>>;
+  SetIdfocus: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const BBDetail: React.FC<IPropsBBForm> = ({
   addRecord,
   shwRecord,
+  updRecord,
   IdFocus,
+  SetAddingStock,
+  SetIdfocus,
 }) => {
+  // const theme = useTheme();
+  // const defaultFontSize = theme.fonts.medium.fontSize;
+  // const defaultFontColor = theme.palette.neutralPrimary;
+  // console.dir([defaultFontColor, defaultFontSize]);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const isEditMode = IdFocus !== 0;
   const zRec = {
     id: "",
     dateOfBirth: undefined as Date | undefined,
@@ -36,7 +105,7 @@ const BBDetail: React.FC<IPropsBBForm> = ({
     gender: "",
   } as IIBBForm;
 
-  if (IdFocus !== 0) {
+  if (isEditMode) {
     const record = shwRecord(IdFocus);
     zRec.id = String(record.id);
     if (record.dateOfBirth) zRec.dateOfBirth = new Date(record.dateOfBirth);
@@ -57,7 +126,7 @@ const BBDetail: React.FC<IPropsBBForm> = ({
     }));
   };
 
-  const handleDateChange = (date: Date | null | undefined) => {
+  const handleDateChange = (date: Date | undefined) => {
     setFormData((prev) => ({
       ...prev,
       dateOfBirth: date ?? undefined,
@@ -77,32 +146,41 @@ const BBDetail: React.FC<IPropsBBForm> = ({
 
   const handleSubmit = () => {
     addRecord(dbmapIBB(formData));
+    setIsModalOpen(false);
+    SetIdfocus(0); //Close BBDetailView;
   };
 
-  React.useEffect(() => {
-    initializeIcons();
+  const handleUpdate = () => {
+    updRecord(dbmapIBB(formData));
+    setIsModalOpen(false);
+    SetIdfocus(0); //Close BBDetailView;
+  };
 
-    registerIcons({
-      icons: {
-        calender: <CalendarIcon />,
-      },
-    });
-  }, []);
+  const Cancel = () => {
+    SetIdfocus(0); //Close BBDetailView;
+    SetAddingStock(false); //Close BBDetailView;
+  };
 
   return (
-    <form>
+    <form className={styles.BBDetail}>
       <Stack
         tokens={{ childrenGap: 20 }}
         styles={{ root: { maxWidth: 400, margin: "0 auto" } }}
       >
-        <TextField
-          label="ID"
-          name="id"
-          value={formData.id}
-          onChange={handleInputChange}
-          required
-          type="number"
-        />
+        {isEditMode ? (
+          <UXTextInBlock Label="ID" Value={formData.id} />
+        ) : (
+          <TextField
+            label="ID"
+            name="id"
+            value={formData.id}
+            onChange={handleInputChange}
+            required
+            type="number"
+            readOnly={isEditMode}
+          />
+        )}
+
         <DatePicker
           label="Date of Birth"
           value={formData.dateOfBirth}
@@ -135,11 +213,49 @@ const BBDetail: React.FC<IPropsBBForm> = ({
           ]}
           required
         />
-        {IdFocus === 0 ? (
-          <PrimaryButton onClick={handleSubmit}>Submit</PrimaryButton>
-        ) : (
-          <PrimaryButton onClick={handleSubmit}>Save</PrimaryButton>
-        )}
+        <Stack horizontal styles={stackStyles} tokens={exampleStackTokens}>
+          {IdFocus === 0 ? (
+            <Stack.Item>
+              <DefaultButton
+                title="Submit item"
+                onClick={handleOpenModal}
+                text="Submit"
+                iconProps={saveIcon}
+              />
+              <ModalConfirm
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onAccept={handleSubmit}
+                modalTitle="Are you sure?"
+              />
+            </Stack.Item>
+          ) : (
+            <Stack.Item>
+              <DefaultButton
+                title="Update item"
+                onClick={handleOpenModal}
+                text="Update"
+                iconProps={updateIcon}
+              />
+              <ModalConfirm
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onAccept={handleUpdate}
+                modalTitle="Are you sure?"
+              />
+            </Stack.Item>
+          )}
+          <Stack.Item>
+            <DefaultButton
+              title="Cancel"
+              width={125}
+              onClick={Cancel}
+              iconProps={iconCancel}
+            >
+              Cancel
+            </DefaultButton>
+          </Stack.Item>
+        </Stack>
       </Stack>
     </form>
   );

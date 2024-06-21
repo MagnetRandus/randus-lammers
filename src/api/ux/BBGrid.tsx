@@ -14,6 +14,7 @@ import {
   DataGridRow,
   TableCellLayout,
   TableColumnDefinition,
+  TableRowId,
 } from "@fluentui/react-table";
 
 interface IPropsBBGrid {
@@ -22,7 +23,6 @@ interface IPropsBBGrid {
 }
 
 const BBGrid: React.FC<IPropsBBGrid> = ({ data, IdFocusSet }) => {
-  //
   const onSortChange: DataGridProps["onSortChange"] = (e, nextSortState) => {
     setSortState(nextSortState);
   };
@@ -33,6 +33,21 @@ const BBGrid: React.FC<IPropsBBGrid> = ({ data, IdFocusSet }) => {
     sortColumn: "id",
     sortDirection: "descending",
   });
+
+  const [selectedRows, setSelectedRows] = React.useState(
+    new Set<TableRowId>([1])
+  );
+  const onSelectionChange: DataGridProps["onSelectionChange"] = (e, data) => {
+    setSelectedRows(data.selectedItems);
+  };
+
+  React.useEffect(() => {
+    selectedRows.forEach((rowSel) => {
+      console.log(`You selected row: ${rowSel}`);
+      IdFocusSet(Number(rowSel));
+    });
+  }, [selectedRows, IdFocusSet]);
+
   const columns: Array<TableColumnDefinition<IBB>> = [
     createTableColumn<IBB>({
       columnId: "id",
@@ -89,7 +104,7 @@ const BBGrid: React.FC<IPropsBBGrid> = ({ data, IdFocusSet }) => {
       renderHeaderCell() {
         return (
           <>
-            <b>DoB</b>
+            <b>Gender</b>
           </>
         );
       },
@@ -148,6 +163,9 @@ const BBGrid: React.FC<IPropsBBGrid> = ({ data, IdFocusSet }) => {
         columns={columns}
         sortState={sortState}
         onSortChange={onSortChange}
+        selectionMode="single"
+        selectedItems={selectedRows}
+        onSelectionChange={onSelectionChange}
       >
         <DataGridHeader>
           <DataGridRow>
@@ -158,7 +176,10 @@ const BBGrid: React.FC<IPropsBBGrid> = ({ data, IdFocusSet }) => {
         </DataGridHeader>
         <DataGridBody<IBB>>
           {({ item, rowId }) => (
-            <DataGridRow<IBB> key={rowId}>
+            <DataGridRow<IBB>
+              key={rowId}
+              selectionCell={{ radioIndicator: { "aria-label": "Select row" } }}
+            >
               {({ renderCell }) => (
                 <DataGridCell>{renderCell(item)}</DataGridCell>
               )}

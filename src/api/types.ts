@@ -14,7 +14,16 @@ export type IBBx = IBB | undefined;
  */
 
 export type TSetRecord = (data: IBB) => void;
+export type TUpdRecord = (data: IBB) => void;
 export type TShwRecord = (id: number) => IBB;
+export type TDelRecord = (id: number) => void;
+
+export interface dbCrudOps {
+  addRecord: TSetRecord;
+  shwRecord: TShwRecord;
+  updRecord: TUpdRecord;
+  delRecord: TDelRecord;
+}
 
 /**
  * Other interfaces

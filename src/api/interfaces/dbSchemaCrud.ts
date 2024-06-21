@@ -1,4 +1,4 @@
-import { dbCrudOps } from "../dbTalk/rh";
+import { dbCrudOps } from "../types";
 import RootObject from "./dbSchema";
 
 interface RootObjectCrud extends RootObject {

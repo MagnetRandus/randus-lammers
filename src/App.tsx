@@ -2,19 +2,29 @@ import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import React from "react";
 import styles from "./App.module.scss";
-import RecordHandler, { dbCrudOps } from "./api/dbTalk/rh";
-import { IDBCrudx } from "./api/types";
-import BBRender from "./api/ux/ControlPanel";
+import RecordHandler from "./api/dbTalk/rh";
+import { dbCrudOps, IDBCrudx } from "./api/types";
 import BBGrid from "./api/ux/BBGrid";
+import BBRender from "./api/ux/ControlPanel";
+import { Stack, ThemeProvider } from "@fluentui/react";
+import BaseTheme from "./api/ux/Themes/BaseTheme";
 
 interface IPropsBBok {
   start: boolean;
 }
 
 const BBok: React.FC<IPropsBBok> = ({ start }) => {
+  // const setCustomCSSVariables = () => {
+  //   const root = document.documentElement;
+
+  //   root.style.setProperty("--colorNeutralStrokeAccessible", "red");
+  // };
+
+  // // setCustomCSSVariables();
+
   [start];
 
-  const [IdFocus, IdFocusSet] = React.useState<number>(2405);
+  const [IdFocus, IdFocusSet] = React.useState<number>(0); //Idfocus !== 0 means "EditMode"
 
   const [db, setDb] = React.useState<IDBCrudx>(undefined);
   const [rh] = React.useState<RecordHandler>(
@@ -33,19 +43,23 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
   }, [db]);
 
   return (
-    <div className={styles.Main}>
-      {db && (
-        <>
-          <div className={styles.ControlPanel}>
-            {dbOps && <BBRender IdFocus={IdFocus} dbCrudOps={dbOps} />}
-          </div>
-          <div className={styles.Gap}></div>
-          {db.adb && <BBGrid IdFocusSet={IdFocusSet} data={db.adb} />}
-        </>
-      )}
-    </div>
+    <ThemeProvider applyTo="body" theme={BaseTheme}>
+      <Stack className={styles.Main}>
+        {db && (
+          <>
+            {dbOps && (
+              <BBRender
+                IdFocus={IdFocus}
+                SetIdfocus={IdFocusSet}
+                dbCrudOps={dbOps}
+              />
+            )}
+            {db.adb && <BBGrid IdFocusSet={IdFocusSet} data={db.adb} />}
+          </>
+        )}
+      </Stack>
+    </ThemeProvider>
   );
-  return <div>hello</div>;
 };
 
 export default function App() {
@@ -66,14 +80,3 @@ if (rootContainer) {
 } else {
   console.error(`broken html, cannot find root`);
 }
-
-/**
- * <button
-        onClick={async () => {
-          const filePaths = await window.eapi.openDialog();
-          filePaths;
-        }}
-      >
-        Open Dialog
-      </button>
- */
