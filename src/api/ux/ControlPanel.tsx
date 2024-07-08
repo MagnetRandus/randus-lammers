@@ -27,6 +27,12 @@ const BBRender: React.FC<IPropsBBRender> = function ({
             console.log("Adding stock");
           }}
         />
+        <DefaultButton
+          text="Test"
+          onClick={() => {
+            window.eapi.useGraph("ONE");
+          }}
+        />
       </Stack>
       {AddingStock && (
         <div>

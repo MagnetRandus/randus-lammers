@@ -24,7 +24,7 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
 
   [start];
 
-  const [IdFocus, IdFocusSet] = React.useState<number>(0); //Idfocus !== 0 means "EditMode"
+  const [IdFocus, IdFocusSet] = React.useState<number>(1); //DataGrid automatically selects the first item
 
   const [db, setDb] = React.useState<IDBCrudx>(undefined);
   const [rh] = React.useState<RecordHandler>(

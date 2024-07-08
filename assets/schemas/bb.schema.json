@@ -31,8 +31,7 @@
   "properties": {
     "id": {
       "type": "integer",
-      "minimum": 2401,
-      "uniqueItems": true
+      "minimum": 2401
     },
     "dateOfBirth": {
       "type": "string",

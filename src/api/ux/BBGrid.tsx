@@ -166,6 +166,8 @@ const BBGrid: React.FC<IPropsBBGrid> = ({ data, IdFocusSet }) => {
         selectionMode="single"
         selectedItems={selectedRows}
         onSelectionChange={onSelectionChange}
+        defaultSelectedItems={undefined}
+        defaultChecked={false}
       >
         <DataGridHeader>
           <DataGridRow>

@@ -6,8 +6,9 @@
     "src/index.ts",
     "src/preload.ts",
     "src/api/db/validate.ts",
-    "src/api/db/dbq.ts"
+    "src/api/db/dbq.ts",
+    "src/apiSrv/**/*.ts"
   ],
-  "exec": "electron-forge start",
+  "exec": "electron-forge start -- --inspect-electron",
   "ext": "ts"
 }

@@ -21,7 +21,18 @@
             "port": 9229,
             "webRoot": "${workspaceFolder}",
             "timeout": 80000
-        }
+        },
+        {
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "name": "nodemon",
+            "request": "launch",
+            "restart": true,
+            "runtimeExecutable": "nodemon",
+            "cwd": "${workspaceFolder}",
+            "type": "node"
+          }
+        
     ],
     "compounds": [
         {

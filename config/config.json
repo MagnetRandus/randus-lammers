@@ -1,0 +1,9 @@
+{
+    "credentials": {
+        "clientId": "8dabd1d8-16a1-46d7-8730-406237d32958",
+        "authority": "https://login.microsoftonline.com/8fab1622-5cf8-4042-a957-54f497dfd43c",
+        "clientSecret": "GPi8Q~wWTvXq0CzLCfbMXHUNI.YZGa9VXJHXlcC9"
+    },
+    "spdomain": "atarendt.sharepoint.com",
+    "subsite": "sys"
+}

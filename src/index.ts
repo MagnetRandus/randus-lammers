@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, session } from "electron";
 import dbq from "./api/db/dbq";
+import { UseGraph } from "./apiSrv/useGraph";
 // eslint-disable-next-line import/no-unresolved
 // import { writeFile } from "original-fs";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -66,6 +67,7 @@ const createWindow = (): void => {
     ipcMain.handle("read-db", function () {
       return dbO.db;
     });
+    ipcMain.handle("use-graph", UseGraph);
   });
 
   // and load the index.html of the app.
