@@ -5,10 +5,9 @@ import {
   LogLevel,
 } from "@azure/msal-node";
 import { Client } from "@microsoft/microsoft-graph-client";
-import { SysConfig } from "../interfaces/i-config";
-import { randusGraphCall } from "../interfaces/i-graphcall";
+import { sysProps } from "./interfaces/i-config";
 
-export async function getGraphClient(sysconfig: SysConfig): Promise<Client> {
+export async function getGraphClient(sysconfig: sysProps): Promise<Client> {
   const config = {
     auth: { ...sysconfig.credentials },
     system: {
@@ -16,6 +15,7 @@ export async function getGraphClient(sysconfig: SysConfig): Promise<Client> {
         loggerCallback(
           loglevel: LogLevel,
           message: string,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           containsPii: boolean
         ) {
           console.log(message);
@@ -44,23 +44,4 @@ export async function getGraphClient(sysconfig: SysConfig): Promise<Client> {
       done(null, response!.accessToken);
     },
   });
-}
-
-export async function makeGraphCallAsync<T>(
-  sysconfig: SysConfig,
-  client: Client
-): Promise<randusGraphCall<T> | Error> {
-  try {
-    const site = await client
-      .api(`/sites/${sysconfig.spdomain}:/sites/${sysconfig.subsite}`)
-      .get();
-    return client.api(`/sites/${site.id}/lists`).get() as Promise<
-      randusGraphCall<T>
-    >;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.log(error.message);
-    }
-    return error as Error;
-  }
 }
