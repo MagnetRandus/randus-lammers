@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { IpcMainInvokeEvent } from "electron";
-import { testListName_Read } from "./interfaces/fields/testListName";
+import { testListName_Read } from "../interfaces/fields/testListName";
 import { Say } from "./logger/logger";
 import { readItems } from "./sp-ops/item/read";
 import { gcSiteInfo } from "./sp-ops/GetSite";
 import { getList } from "./sp-ops/GetList";
-import { IList } from "./interfaces/i-lists";
-import { ISite } from "./interfaces/i-site";
+import { IList } from "../interfaces/i-lists";
+import { ISite } from "../interfaces/i-site";
 import { uriParamsBuild } from "./sp-ops/uriParmBuild";
 
 export type graphDoWhat = "read" | "create" | "update" | "delete";

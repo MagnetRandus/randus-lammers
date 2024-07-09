@@ -1,5 +1,5 @@
 import Config from "../getConfig";
-import { ISite } from "../interfaces/i-site";
+import { ISite } from "../../interfaces/i-site";
 
 export async function gcSiteInfo(): Promise<ISite | Error> {
   try {

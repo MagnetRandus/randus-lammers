@@ -1,4 +1,4 @@
-import { IColLookup, IColNumber, IColText } from "./i-colomn.js";
+import { IColLookup, IColNumber, IColText } from "./i-column";
 
 /**
  * Column types and definitions are listed here:

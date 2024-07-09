@@ -1,5 +1,5 @@
-import IBB from "../interfaces/IBB";
-import IIBBForm from "../interfaces/IIBBForm";
+import IBB from "../../interfaces/IBB";
+import IIBBForm from "../../interfaces/IIBBForm";
 import convertDateString from "../t/DateParse";
 import { BGender } from "../types";
 

@@ -1,4 +1,5 @@
-export interface IList {
+/* eslint-disable @typescript-eslint/no-empty-interface */
+export interface ISite {
   "@odata.context": string;
   createdDateTime: string;
   description: string;

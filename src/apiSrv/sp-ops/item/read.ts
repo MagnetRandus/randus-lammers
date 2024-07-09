@@ -1,8 +1,8 @@
-import { Items } from "../../interfaces/i-graph";
+import { Items } from "../../../interfaces/i-graph";
 import Config from "../../getConfig";
-import { GraphItem, IBaseField } from "../../interfaces/i-item";
-import { IList } from "../../interfaces/i-lists";
-import { ISite } from "../../interfaces/i-site";
+import { GraphItem, IBaseField } from "../../../interfaces/i-item";
+import { IList } from "../../../interfaces/i-lists";
+import { ISite } from "../../../interfaces/i-site";
 import { BrandedString, UriParams } from "../uriParmBuild";
 
 export async function readItem<K extends Partial<IBaseField>>(

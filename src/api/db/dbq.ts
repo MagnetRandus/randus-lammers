@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
-import IDBStruct from "../interfaces/dbSchema";
+import IDBStruct from "../../interfaces/dbSchema";
 import Ajv, { JSONSchemaType } from "ajv";
 import addFormats from "ajv-formats";
 

@@ -1,6 +1,6 @@
 import Config from "../../getConfig";
-import { IList } from "../../interfaces/i-lists";
-import { ISite } from "../../interfaces/i-site";
+import { IList } from "../../../interfaces/i-lists";
+import { ISite } from "../../../interfaces/i-site";
 
 async function deleteItem(
   siteInf: ISite,

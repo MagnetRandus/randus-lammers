@@ -1,6 +1,6 @@
-import ibb from "./interfaces/IBB";
-import idbo from "../api/interfaces/dbSchema";
-import RootObjectCrud from "./interfaces/dbSchemaCrud";
+import ibb from "../interfaces/IBB";
+import idbo from "../interfaces/dbSchema";
+import RootObjectCrud from "../interfaces/dbSchemaCrud";
 
 export type IDBO = idbo;
 export type IDBOx = IDBO | undefined;

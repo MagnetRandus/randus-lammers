@@ -1,4 +1,4 @@
-import { BGender } from "../types";
+import { BGender } from "../api/types";
 
 interface IBB {
   id: number;

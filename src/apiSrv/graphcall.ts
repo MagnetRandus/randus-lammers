@@ -5,7 +5,7 @@ import {
   LogLevel,
 } from "@azure/msal-node";
 import { Client } from "@microsoft/microsoft-graph-client";
-import { sysProps } from "./interfaces/i-config";
+import { sysProps } from "../interfaces/i-config";
 
 export async function getGraphClient(sysconfig: sysProps): Promise<Client> {
   const config = {

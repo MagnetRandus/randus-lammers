@@ -1,7 +1,7 @@
 import Config from "../../getConfig";
-import { GraphItem, IBaseField } from "../../interfaces/i-item";
-import { IList } from "../../interfaces/i-lists";
-import { ISite } from "../../interfaces/i-site";
+import { GraphItem, IBaseField } from "../../../interfaces/i-item";
+import { IList } from "../../../interfaces/i-lists";
+import { ISite } from "../../../interfaces/i-site";
 
 async function createItem<K extends Partial<IBaseField>>(
   siteInf: ISite,

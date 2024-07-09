@@ -1,7 +1,7 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from "electron";
-import IDBStruct from "./api/interfaces/dbSchema";
+import IDBStruct from "./interfaces/dbSchema";
 
 const eapi = {
   setTitle: (title: string) => ipcRenderer.send("set-title", title),

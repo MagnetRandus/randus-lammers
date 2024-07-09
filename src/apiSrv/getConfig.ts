@@ -9,7 +9,7 @@ import {
 } from "@azure/msal-node";
 import { readFile } from "fs/promises";
 import chalk from "chalk";
-import { sysProps } from "./interfaces/i-config";
+import { sysProps } from "../interfaces/i-config";
 
 class Config {
   private static instance: Config;

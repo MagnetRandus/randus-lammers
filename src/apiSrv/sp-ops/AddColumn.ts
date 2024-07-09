@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Client } from "@microsoft/microsoft-graph-client";
 import chalk from "chalk";
-import { ColumnDefinition } from "../interfaces/i-columnDefinition";
+import { ColumnDefinition } from "../../interfaces/i-columnDefinition";
 
 async function addColumn(
   siteId: string,

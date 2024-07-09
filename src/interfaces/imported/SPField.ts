@@ -12,10 +12,6 @@ export interface DescriptionResource {
   __deferred: __deferred;
 }
 
-export interface __deferred {
-  uri: string;
-}
-
 export interface TitleResource {
   __deferred: __deferred;
 }

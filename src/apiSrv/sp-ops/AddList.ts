@@ -1,5 +1,5 @@
 import Config from "../getConfig";
-import { IList } from "../interfaces/i-lists";
+import { IList } from "../../interfaces/i-lists";
 
 async function addList(siteId: string, displayName: string): Promise<IList> {
   const cfg = Config.getInstance();

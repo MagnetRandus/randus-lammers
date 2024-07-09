@@ -31,7 +31,7 @@ registerIcons({
     iconUpdate: <SaveAsIcon />,
   },
 });
-import IIBBForm from "../interfaces/IIBBForm";
+import IIBBForm from "../../interfaces/IIBBForm";
 import dbmapIBB from "../dbmap/dbmap-IBB";
 import { dbCrudOps } from "../types";
 
