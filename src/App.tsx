@@ -1,63 +1,92 @@
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./App.module.scss";
-import RecordHandler from "./api/dbTalk/rh";
-import { dbCrudOps, IDBCrudx } from "./api/types";
-import BBGrid from "./api/ux/BBGrid";
-import BBRender from "./api/ux/ControlPanel";
+import BaseTheme from "./apic/Themes/BaseTheme";
+import ControlPanel from "./apic/ControlPanel/ControlPanel";
 import { Stack, ThemeProvider } from "@fluentui/react";
-import BaseTheme from "./api/ux/Themes/BaseTheme";
+import BBDetail from "./apic/BBItem/BBItem";
+import { CloudBaseCU, CloudBaseR } from "iSurfaces/cloud-base-item";
+import { uriParamsBuild } from "./apic/tools";
 
 interface IPropsBBok {
   start: boolean;
 }
 
+const eP = uriParamsBuild<CloudBaseR>("fields", [
+  "id",
+  "gender",
+  "sire",
+  "dam",
+  "tagnr",
+  "dateOfBirth",
+  "Title",
+]);
+
 const BBok: React.FC<IPropsBBok> = ({ start }) => {
-  // const setCustomCSSVariables = () => {
-  //   const root = document.documentElement;
-
-  //   root.style.setProperty("--colorNeutralStrokeAccessible", "red");
-  // };
-
-  // // setCustomCSSVariables();
-
   [start];
 
-  const [IdFocus, IdFocusSet] = React.useState<number>(1); //DataGrid automatically selects the first item
+  const validTagNrs = [18, 0, 1, 2, 3, 4, 10, 15]
+    .sort((a, b) => a - b)
+    .map((h) => h.toString());
 
-  const [db, setDb] = React.useState<IDBCrudx>(undefined);
-  const [rh] = React.useState<RecordHandler>(
-    new RecordHandler(window.eapi, setDb)
+  const [isAdding, setIsAdding] = useState(false);
+
+  const [formData, setFormData] = useState<Partial<CloudBaseCU>>({
+    tagnr: "0",
+    dateOfBirth: new Date(),
+    damLookupId: 0,
+    sireLookupId: 0,
+  });
+
+  const [statusMessage, setStatusMessage] = useState<string | undefined>(
+    "Welcome"
   );
-  const [dbOps, dbOpsSet] = React.useState<dbCrudOps | undefined>(undefined);
 
-  React.useEffect(() => {
-    rh.getDb();
-  }, [rh]);
+  useEffect(() => {
+    setTimeout(() => {
+      setStatusMessage(undefined);
+    }, 5000);
+  }, [statusMessage, setStatusMessage]);
 
-  React.useEffect(() => {
-    if (db) {
-      dbOpsSet(db.crud);
-    }
-  }, [db]);
+  useEffect(() => {
+    window.eapi
+      .cloudReadList<"UriParams">(eP)
+      .then((res) => {
+        console.log("GOT ITEMS");
+        console.dir(res);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
 
   return (
     <ThemeProvider applyTo="body" theme={BaseTheme}>
-      <Stack className={styles.Main}>
-        {db && (
-          <>
-            {dbOps && (
-              <BBRender
-                IdFocus={IdFocus}
-                SetIdfocus={IdFocusSet}
-                dbCrudOps={dbOps}
-              />
-            )}
-            {db.adb && <BBGrid IdFocusSet={IdFocusSet} data={db.adb} />}
-          </>
-        )}
-      </Stack>
+      <form
+        onSubmit={(ev: React.FormEvent) => {
+          ev.preventDefault();
+          if (formData.damLookupId === 0) delete formData.damLookupId;
+          if (formData.sireLookupId === 0) delete formData.sireLookupId;
+          console.dir(formData);
+          window.eapi.cloudWrite(formData);
+        }}
+      >
+        <Stack className={styles.Main}>
+          <ControlPanel
+            setIsAdding={setIsAdding}
+            isAdding={isAdding}
+            statusMessage={statusMessage}
+          />
+          {isAdding && (
+            <BBDetail
+              formData={formData}
+              setFormData={setFormData}
+              validTagNrs={validTagNrs}
+            />
+          )}
+        </Stack>
+      </form>
     </ThemeProvider>
   );
 };

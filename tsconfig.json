@@ -15,12 +15,23 @@
     "declaration": true,
     "strictNullChecks": true,
     "paths": {
-      "*": ["node_modules/*"]
+      "iSurfaces/*": [
+        "src/iSurfaces/*"
+      ],
+      "*": [
+        "node_modules/*"
+      ]
     },
   },
-  "include": ["src/**/*", "assets/schemas"],
+  "include": [
+    "src/**/*",
+    "assets/schemas"
+  ],
+  "exclude": [
+    "src/App_old.tsx"
+  ],
   "files": [
     "src/preload.d.ts",
-    "src/scss.d.ts"
+    "src/scss.d.ts",
   ]
 }

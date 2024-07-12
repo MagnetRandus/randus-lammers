@@ -1,0 +1,14 @@
+@use "../Styles/ColorScheme.scss" as colors;
+@use "../Themes/ButtonThemes.scss" as buttons;
+@use "../Themes/BoxThemes.scss" as boxTheme;
+
+.BBGrid {
+    @include boxTheme.box-common();
+}
+:root {
+    --strokeWidthThin: #{colors.$desert-tan};
+    --borderRadiusCircular: 10px;
+    --spacingVerticalS: 3px;
+    --spacingHorizontalS: 3px;
+    --colorCompoundBrandForeground1: #{colors.$peach-beige};
+}

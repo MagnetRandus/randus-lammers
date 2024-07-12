@@ -1,8 +1,0 @@
-@use "ColorScheme.scss" as colors;
-@use "./Themes/ButtonThemes.scss" as buttons;
-@use "./Themes/BoxThemes.scss" as boxTheme;
-
-.BBDetail {
-    color: inherit;
-    @include boxTheme.box-common;
-}

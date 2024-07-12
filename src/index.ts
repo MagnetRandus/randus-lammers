@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, session } from "electron";
-import dbq from "./api/db/dbq";
-import { UseGraph } from "./apiSrv/useGraph";
+import { writeToLog } from "./apiSrv/logger/writeToLog";
+import { cloudWrite } from "./apiSrv/cloud/write";
+import { cloudReadList } from "./apiSrv/cloud/read";
 // eslint-disable-next-line import/no-unresolved
 // import { writeFile } from "original-fs";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -29,16 +30,10 @@ const createWindow = (): void => {
     }
   }
 
-  const dbO = new dbq();
-
   ipcMain.on("set-title", (event, title) => {
     const webContents = event.sender;
     const win = BrowserWindow.fromWebContents(webContents);
     if (win) win.setTitle(title);
-  });
-
-  ipcMain.on("write-db", (event, db) => {
-    dbO.db = db;
   });
 
   /**
@@ -64,10 +59,9 @@ const createWindow = (): void => {
     });
 
     ipcMain.handle("dialog:openFile", handleFileOpen);
-    ipcMain.handle("read-db", function () {
-      return dbO.db;
-    });
-    ipcMain.handle("use-graph", UseGraph);
+    ipcMain.handle("log-write", writeToLog);
+    ipcMain.handle("cloudWrite", cloudWrite);
+    ipcMain.handle("cloudReadList", cloudReadList);
   });
 
   // and load the index.html of the app.

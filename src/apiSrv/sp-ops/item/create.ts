@@ -1,13 +1,13 @@
+import { cloudSPSite } from "iSurfaces/cloud-spsite";
 import Config from "../../getConfig";
-import { GraphItem, IBaseField } from "../../../interfaces/i-item";
-import { IList } from "../../../interfaces/i-lists";
-import { ISite } from "../../../interfaces/i-site";
+import { CloudSPList } from "iSurfaces/cloud-splist";
+import { IList } from "iSurfaces/iList";
 
-async function createItem<K extends Partial<IBaseField>>(
-  siteInf: ISite,
+async function createItem<K extends Partial<CloudSPList>, T>(
+  siteInf: cloudSPSite,
   lstInf: IList,
   payload: Partial<K>
-): Promise<GraphItem<K> | Error> {
+): Promise<T | Error> {
   try {
     const cfg = await Config.getInstance();
     const createItemEndpoint = `/sites/${siteInf.id}/lists/${lstInf.id}/items`;

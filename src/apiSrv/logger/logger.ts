@@ -1,7 +1,12 @@
 import { GraphError } from "@microsoft/microsoft-graph-client";
 import chalk from "chalk";
 import { sep } from "path";
-import winston, { LoggerOptions, format } from "winston";
+import winston, {
+  LoggerOptions,
+  createLogger,
+  format,
+  transports,
+} from "winston";
 import { isGraphError } from "./isGraphError";
 const { combine, timestamp, label, printf } = format;
 
@@ -41,13 +46,13 @@ export class Say {
       level: "info",
       format: combine(label({ label: Label }), timestamp(), this.LogFormat),
       transports: [
-        new winston.transports.File({
+        new transports.File({
           filename: `${this.logDir}${sep}${this.logFileName}.log`,
           level: "info",
         }),
       ],
     };
-    return winston.createLogger(logOpts);
+    return createLogger(logOpts);
   }
   Info(Label: string, message: string) {
     this.SetLogOpts(Label).log({ level: "info", message: message });

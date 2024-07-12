@@ -1,5 +1,5 @@
+import { IList } from "iSurfaces/iList";
 import Config from "../getConfig";
-import { IList } from "../../interfaces/i-lists";
 
 /**
  *
@@ -12,7 +12,7 @@ import { IList } from "../../interfaces/i-lists";
 export async function getList(
   siteId: string,
   identifier: string
-): Promise<IList> {
+): Promise<IList | Error> {
   const cfg = Config.getInstance();
   return (await cfg).client.api(`/sites/${siteId}/lists/${identifier}`).get();
 }
