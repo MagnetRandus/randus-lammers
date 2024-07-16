@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import React, { useEffect, useState } from "react";
-import { BaseButton, Stack, ThemeProvider } from "@fluentui/react";
+import React, { useState } from "react";
+import { Stack, ThemeProvider } from "@fluentui/react";
 import styles from "./App.module.scss";
 import BaseTheme from "Ux/BaseTheme";
 import ControlPanel from "Client/ControlPanel/ControlPanel";
 import ItemForm from "Client/ItemForm/ItemForm";
-import { WithCustomFields } from "Interfaces/LISTS/base/IGraphListItemCustomField";
-import Fields from "Interfaces/SP/graph-listitem-field";
-import { isGraphError } from "Tools/IsError";
-// import { Say } from "Local/logger/Logger";
+import {
+  TCreateItemBase,
+  TReadItemBase,
+} from "Interfaces/LISTS/base/IGraphListItemCustomField";
+
 interface IPropsBBok {
   start: boolean;
 }
@@ -18,43 +19,57 @@ interface IPropsBBok {
 const BBok: React.FC<IPropsBBok> = ({ start }) => {
   [start];
 
-  // const [localLogging, setLocalLogging] = useState<Say | undefined>();
-
-  // window.eapi.localLogging().then((say) => setLocalLogging(say));
-
   const [statusMessage, setStatusMessage] = useState<string | undefined>(
     "Welcome"
   );
 
   const [isAdding, setIsAdding] = useState(false);
 
-  const [formData, setFormData] = useState<any>({
+  const formDefaults: Partial<TCreateItemBase> = {
     tagnr: "0",
     dateOfBirth: new Date(),
     damLookupId: 0,
     sireLookupId: 0,
-  });
+    gender: "Buck",
+  };
+
+  const [formData, setFormData] =
+    useState<Partial<TCreateItemBase>>(formDefaults);
 
   const validTagNrs = [18, 0, 1, 2, 3, 4, 10, 15]
     .sort((a, b) => a - b)
     .map((h) => h.toString());
-
-  useEffect(() => {
-    setTimeout(() => {
-      setStatusMessage(undefined);
-    }, 5000);
-  }, [statusMessage, setStatusMessage]);
-
-  // useEffect(() => {
-
-  // }, []);
 
   return (
     <ThemeProvider applyTo="body" theme={BaseTheme}>
       <form
         onSubmit={(ev: React.FormEvent) => {
           ev.preventDefault();
-          console.log("SUBMIT CALLED");
+
+          const sData = { ...formData };
+          setFormData(formDefaults);
+          alert("submitting");
+
+          if (formData.damLookupId === 0) delete sData.damLookupId;
+          if (formData.sireLookupId === 0) delete sData.sireLookupId;
+
+          window.eapi
+            .cloudCreateItem<TReadItemBase>("base", sData)
+            .then((res) => {
+              setStatusMessage(`${res.tagnr} saved as ${res.id}`);
+            })
+            .catch((err) => {
+              if (err instanceof Error) {
+                if (
+                  err.message.indexOf("cloudCreateItem") !== -1 &&
+                  err.message.indexOf("unique") !== -1
+                ) {
+                  alert("Duplicate Tag Nr");
+                  setFormData(formDefaults);
+                }
+                setStatusMessage(err.message);
+              }
+            });
         }}
       >
         <Stack className={styles.Main}>
@@ -72,46 +87,13 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
           )}
         </Stack>
       </form>
-      <BaseButton
+      {/* <BaseButton
         onClick={() => {
-          window.eapi
-            .cloudCreateItem<WithCustomFields<Fields>>("base", {
-              Title: "blehbleh1",
-              tagnr: "abc12341",
-            })
-            .then((res) => {
-              console.log(`Item with ID: ${res.id} created!`);
-            })
-            .catch((err) => {
-              if (isGraphError(err)) {
-                const {
-                  body,
-                  code,
-                  date,
-                  message,
-                  name,
-                  requestId,
-                  statusCode,
-                  headers,
-                  stack,
-                } = err;
-                [
-                  body,
-                  code,
-                  date,
-                  message,
-                  name,
-                  requestId,
-                  statusCode,
-                  headers,
-                  stack,
-                ];
-              }
-            });
+    
         }}
       >
         TEST
-      </BaseButton>
+      </BaseButton> */}
     </ThemeProvider>
   );
 };

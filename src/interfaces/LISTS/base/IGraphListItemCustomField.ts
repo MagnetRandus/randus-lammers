@@ -1,6 +1,7 @@
+import IGraphListItem from "Interfaces/SP/graph-listitem";
 import { Gender } from "Types/Gender";
 
-interface IGraphListItemCustomField {
+export interface IGraphListItemCustomFieldRead {
   tagnr: string;
   dateOfBirth: Date;
   sire: number;
@@ -8,12 +9,9 @@ interface IGraphListItemCustomField {
   gender: Gender;
 }
 
-// export interface IGraphListItemCustomField extends Fields {
-//   tagnr: string;
-//   dateOfBirth: Date;
-//   sire: number;
-//   dam: number;
-//   gender: Gender;
-// }
+export type WithSPFields<T> = T & IGraphListItem;
 
-export type WithCustomFields<T> = T & IGraphListItemCustomField;
+export type IGraphLIstItemCustomFieldCreate<T extends IGraphListItemCustomFieldRead> = Omit<T, "sire" | "dam"> & { damLookupId: number; sireLookupId: number };
+
+export type TCreateItemBase = IGraphLIstItemCustomFieldCreate<IGraphListItemCustomFieldRead>;
+export type TReadItemBase = WithSPFields<IGraphListItemCustomFieldRead>;

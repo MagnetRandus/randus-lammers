@@ -15,22 +15,19 @@ async function cloudCreateItem<T>(event: IpcMainInvokeEvent, ...args: [string, a
   Say.getInstance().Info("Got site", siteInfo.displayName);
 
   return new Promise<RCloudCreateReturnItem<T>>((resolve, reject) => {
-    try {
-      gphCreateItem<any>(siteInfo.id, listname, payload)
-        .then((res) => {
-          resolve(res);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    } catch (err) {
-      if (err instanceof Error) {
-        reject(err);
-      } else {
-        Say.getInstance().Error(`WeirdnessIn:cloudCreateItem`, JSON.stringify(err));
-        reject(`Unkown Error in cloudCreateItem refer to the log`);
-      }
-    }
+    gphCreateItem<any>(siteInfo.id, listname, payload)
+      .then((res) => {
+        resolve(res);
+      })
+      .catch((err) => {
+        Say.getInstance().Error("cloudCreateItem", err);
+
+        if ("message" in err) {
+          reject(err.message);
+        } else {
+          reject(`Error without a message, check log`);
+        }
+      });
   });
 }
 export default cloudCreateItem;

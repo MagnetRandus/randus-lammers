@@ -6,7 +6,7 @@ import { CreatedBy } from "./graph-createdBy";
 import { ContentType } from "./graph-contenttype";
 import { LastModifiedBy } from "./graph-lastmodifiedby";
 import { ParentReference } from "./graph-parentreference";
-import { WithCustomFields } from "Interfaces/LISTS/base/IGraphListItemCustomField";
+import { WithSPFields } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 import Fields from "./graph-listitem-field";
 
 interface IGraphListItem {
@@ -22,7 +22,7 @@ interface IGraphListItem {
   parentReference: ParentReference;
   contentType: ContentType;
   "fields@odata.context": string;
-  fields: WithCustomFields<Fields>;
+  fields: WithSPFields<Fields>;
 }
 
 export default IGraphListItem;
