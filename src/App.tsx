@@ -1,47 +1,43 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import React, { useEffect, useState } from "react";
+import { BaseButton, Stack, ThemeProvider } from "@fluentui/react";
 import styles from "./App.module.scss";
-import BaseTheme from "./apic/Themes/BaseTheme";
-import ControlPanel from "./apic/ControlPanel/ControlPanel";
-import { Stack, ThemeProvider } from "@fluentui/react";
-import BBDetail from "./apic/BBItem/BBItem";
-import { CloudBaseCU, CloudBaseR } from "iSurfaces/cloud-base-item";
-import { uriParamsBuild } from "./apic/tools";
-
+import BaseTheme from "Ux/BaseTheme";
+import ControlPanel from "Client/ControlPanel/ControlPanel";
+import ItemForm from "Client/ItemForm/ItemForm";
+import { WithCustomFields } from "Interfaces/LISTS/base/IGraphListItemCustomField";
+import Fields from "Interfaces/SP/graph-listitem-field";
+import { isGraphError } from "Tools/IsError";
+// import { Say } from "Local/logger/Logger";
 interface IPropsBBok {
   start: boolean;
 }
 
-const eP = uriParamsBuild<CloudBaseR>("fields", [
-  "id",
-  "gender",
-  "sire",
-  "dam",
-  "tagnr",
-  "dateOfBirth",
-  "Title",
-]);
-
 const BBok: React.FC<IPropsBBok> = ({ start }) => {
   [start];
 
-  const validTagNrs = [18, 0, 1, 2, 3, 4, 10, 15]
-    .sort((a, b) => a - b)
-    .map((h) => h.toString());
+  // const [localLogging, setLocalLogging] = useState<Say | undefined>();
+
+  // window.eapi.localLogging().then((say) => setLocalLogging(say));
+
+  const [statusMessage, setStatusMessage] = useState<string | undefined>(
+    "Welcome"
+  );
 
   const [isAdding, setIsAdding] = useState(false);
 
-  const [formData, setFormData] = useState<Partial<CloudBaseCU>>({
+  const [formData, setFormData] = useState<any>({
     tagnr: "0",
     dateOfBirth: new Date(),
     damLookupId: 0,
     sireLookupId: 0,
   });
 
-  const [statusMessage, setStatusMessage] = useState<string | undefined>(
-    "Welcome"
-  );
+  const validTagNrs = [18, 0, 1, 2, 3, 4, 10, 15]
+    .sort((a, b) => a - b)
+    .map((h) => h.toString());
 
   useEffect(() => {
     setTimeout(() => {
@@ -49,37 +45,26 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
     }, 5000);
   }, [statusMessage, setStatusMessage]);
 
-  useEffect(() => {
-    window.eapi
-      .cloudReadList<"UriParams">(eP)
-      .then((res) => {
-        console.log("GOT ITEMS");
-        console.dir(res);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
+  // useEffect(() => {
+
+  // }, []);
 
   return (
     <ThemeProvider applyTo="body" theme={BaseTheme}>
       <form
         onSubmit={(ev: React.FormEvent) => {
           ev.preventDefault();
-          if (formData.damLookupId === 0) delete formData.damLookupId;
-          if (formData.sireLookupId === 0) delete formData.sireLookupId;
-          console.dir(formData);
-          window.eapi.cloudWrite(formData);
+          console.log("SUBMIT CALLED");
         }}
       >
         <Stack className={styles.Main}>
           <ControlPanel
-            setIsAdding={setIsAdding}
             isAdding={isAdding}
+            setIsAdding={setIsAdding}
             statusMessage={statusMessage}
           />
           {isAdding && (
-            <BBDetail
+            <ItemForm
               formData={formData}
               setFormData={setFormData}
               validTagNrs={validTagNrs}
@@ -87,6 +72,46 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
           )}
         </Stack>
       </form>
+      <BaseButton
+        onClick={() => {
+          window.eapi
+            .cloudCreateItem<WithCustomFields<Fields>>("base", {
+              Title: "blehbleh1",
+              tagnr: "abc12341",
+            })
+            .then((res) => {
+              console.log(`Item with ID: ${res.id} created!`);
+            })
+            .catch((err) => {
+              if (isGraphError(err)) {
+                const {
+                  body,
+                  code,
+                  date,
+                  message,
+                  name,
+                  requestId,
+                  statusCode,
+                  headers,
+                  stack,
+                } = err;
+                [
+                  body,
+                  code,
+                  date,
+                  message,
+                  name,
+                  requestId,
+                  statusCode,
+                  headers,
+                  stack,
+                ];
+              }
+            });
+        }}
+      >
+        TEST
+      </BaseButton>
     </ThemeProvider>
   );
 };

@@ -5,9 +5,9 @@
   "watch": [
     "src/index.ts",
     "src/preload.ts",
-    "src/api/db/validate.ts",
-    "src/api/db/dbq.ts",
-    "src/apiSrv/**/*.ts"
+    "src/renderer.*",
+    "src/api-local/**/*",
+    "src/api-server/**/*"
   ],
   "exec": "electron-forge start -- --inspect-electron",
   "ext": "ts"

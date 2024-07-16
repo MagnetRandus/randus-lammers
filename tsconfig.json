@@ -15,8 +15,26 @@
     "declaration": true,
     "strictNullChecks": true,
     "paths": {
-      "iSurfaces/*": [
-        "src/iSurfaces/*"
+      "Interfaces/*": [
+        "src/interfaces/*"
+      ],
+      "Client/*": [
+        "src/api-client/*"
+      ],
+      "Server/*": [
+        "src/api-server/*"
+      ],
+      "Local/*": [
+        "src/api-local/*"
+      ],
+      "Ux/*": [
+        "src/ux/*"
+      ],
+      "Types/*": [
+        "src/types/*"
+      ],
+      "Tools/*": [
+        "src/tools/*"
       ],
       "*": [
         "node_modules/*"

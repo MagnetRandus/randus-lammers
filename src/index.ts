@@ -1,9 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog, session } from "electron";
-import { writeToLog } from "./apiSrv/logger/writeToLog";
-import { cloudWrite } from "./apiSrv/cloud/write";
-import { cloudReadList } from "./apiSrv/cloud/read";
-// eslint-disable-next-line import/no-unresolved
-// import { writeFile } from "original-fs";
+import { Say } from "Local/logger/Logger";
+import cloudCreateItem from "Server/ipc/cloudCreateItem";
+import SPInitSite from "Server/spInit";
+import { TErrorLevel } from "Types/local-logging-properties";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
@@ -11,6 +10,18 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 if (require("electron-squirrel-startup")) {
   app.quit();
 }
+
+Say.getInstance().Info("SPInit", "Started");
+
+SPInitSite.getInstance()
+  .then((spSiteInfo) => {
+    spSiteInfo.SiteRootInfo.then((inf) => {
+      Say.getInstance().Info("SPInit-SiteInfo", inf.siteCollection.hostname);
+    });
+  })
+  .catch((err) => {
+    Say.getInstance().Error("SPInit-SiteInfo Failed", JSON.stringify(err));
+  });
 
 const createWindow = (): void => {
   // Create the browser window.
@@ -36,6 +47,11 @@ const createWindow = (): void => {
     if (win) win.setTitle(title);
   });
 
+  ipcMain.on("localLogging", (event, ...args: [TErrorLevel, string, string]) => {
+    const [ErrorLevel, Label, Message] = args;
+    Say.getInstance()[ErrorLevel](Label, Message);
+  });
+
   /**
    * https://res-1.cdn.office.net/files/fabric-cdn-prod_20230815.002/assets/fonts/leelawadeeui-thai/leelawadeeui-semilight.woff2
    * https://res.cdn.office.net/files/fabric-cdn-prod_20240129.001/assets/icons/fabric-icons-a13498cf.woff
@@ -59,9 +75,7 @@ const createWindow = (): void => {
     });
 
     ipcMain.handle("dialog:openFile", handleFileOpen);
-    ipcMain.handle("log-write", writeToLog);
-    ipcMain.handle("cloudWrite", cloudWrite);
-    ipcMain.handle("cloudReadList", cloudReadList);
+    ipcMain.handle("cloudCreateItem", cloudCreateItem);
   });
 
   // and load the index.html of the app.
@@ -80,6 +94,8 @@ app.on("ready", createWindow);
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
+  Say.getInstance().Info("CLOSED", "---LOG CLOSED---");
+  Say.getInstance().Logger.end();
   if (process.platform !== "darwin") {
     app.quit();
   }

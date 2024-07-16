@@ -1,8 +1,12 @@
 {
-    "json.schemas": [
-    {
-      "fileMatch": ["/assets/schemas/db/*"],
-      "url": "./assets/schemas/db.schema.json"
-    },
-  ]
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 500,
+  "[typescript]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 200
+  },
+  "[typescriptreact]": {
+    "editor.wordWrap": "wordWrapColumn",
+    "editor.wordWrapColumn": 200
+  }
 }

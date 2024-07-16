@@ -1,10 +1,10 @@
 import type { Configuration } from "webpack";
+import * as path from "path";
 
 import { rules } from "./webpack.rules";
 import { plugins } from "./webpack.plugins";
 
 import "webpack-dev-server"; // Import to get types for devServer
-// import { TsconfigPathsPlugin } from "tsconfig-paths-webpack-plugin";
 
 rules.push({
   test: /\.css$/,
@@ -18,21 +18,15 @@ export const rendererConfig: Configuration = {
   },
   plugins,
   resolve: {
-    extensions: [".js", ".ts", ".jsx", ".tsx", ".css"],
-    // alias: {
-    //   iSurfaces: resolve(__dirname, "src/iSurfaces"),
-    // },
+    extensions: [".js", ".ts", ".jsx", ".tsx", ".css", ".scss"],
+    alias: {
+      Interfaces: path.resolve(__dirname, "src/interfaces/"),
+      Types: path.resolve(__dirname, "src/types/"),
+      Client: path.resolve(__dirname, "src/api-client/"),
+      Ux: path.resolve(__dirname, "src/ux/"),
+      Tools: path.resolve(__dirname, "src/tools"),
+    },
   },
-  // resolve: {
-  //   alias: {
-  //     iSurfaces: path.resolve(__dirname, "src/iSurfaces"),
-  //   },
-  //   plugins: [
-  //     new TsconfigPathsPlugin({
-  //       extensions: [".js", ".jsx", ".json", ".ts", ".tsx"],
-  //     }),
-  //   ],
-  // },
   devServer: {
     port: 8080,
     hot: true,

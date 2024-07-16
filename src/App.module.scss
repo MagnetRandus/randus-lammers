@@ -1,4 +1,4 @@
-@use "./apic/Styles/ColorScheme.scss" as colors;
+@use "Ux/ColorScheme" as colors;
 
 .Main {
     & > div {

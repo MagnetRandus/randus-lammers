@@ -1,8 +1,0 @@
-@use "../ColorScheme.scss" as colors;
-
-@mixin box-common {
-    background-color: colors.$almond-cream;
-    padding-top: 10px;
-    padding-bottom: 11px;
-    box-shadow: 2px 2px 4px colors.$peach-beige;
-}

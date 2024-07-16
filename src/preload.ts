@@ -1,23 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// Disable no-unused-vars, broken for spread args
-/* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from "electron";
-import { IPCLogWrite } from "iSurfaces/ipc";
-import { CloudBaseCU, CloudBaseR } from "iSurfaces/cloud-base-item";
-import { BrandedString } from "iSurfaces/cloud-graph-endpoint";
+import { RCloudCreateReturnItem } from "Types/cloud-item-create-rt";
+import { TErrorLevel } from "Types/local-logging-properties";
 
 const eapi = {
   setTitle: (title: string) => ipcRenderer.send("set-title", title),
-  cloudWrite: (bbinf: Partial<CloudBaseCU>): Promise<CloudBaseR> =>
-    ipcRenderer.invoke("cloudWrite", bbinf),
-  cloudReadList: <T extends string>(
-    endPoint: BrandedString<T>
-  ): Promise<Array<CloudBaseR>> =>
-    ipcRenderer.invoke("cloudReadList", endPoint),
-  logWrite: (ipcloginfo: IPCLogWrite) =>
-    ipcRenderer.invoke("log-write", ipcloginfo),
-  openDialog: (): Promise<Array<string>> =>
-    ipcRenderer.invoke("dialog:openFile"),
+  cloudCreateItem: <T>(listname: string, payload: any): Promise<RCloudCreateReturnItem<T>> => ipcRenderer.invoke("cloudCreateItem", listname, payload),
+  localLogging: (a: TErrorLevel, Label: string, Message: string): any => ipcRenderer.send("localLogging", a, Label, Message),
 };
 
 contextBridge.exposeInMainWorld("eapi", eapi);
