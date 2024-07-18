@@ -1,31 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Stack, ThemeProvider } from "@fluentui/react";
 import styles from "./App.module.scss";
 import BaseTheme from "Ux/BaseTheme";
 import ControlPanel from "Client/ControlPanel/ControlPanel";
 import ItemForm from "Client/ItemForm/ItemForm";
 import {
-  TCreateItemBase,
-  TReadItemBase,
+  TSPListBaseCreate,
+  TSPListBaseRead,
 } from "Interfaces/LISTS/base/IGraphListItemCustomField";
+import Items from "Client/Items/Items";
+import IdTagNr from "Interfaces/IdTagNr";
+import ObjectMake from "Tools/ObjectMake";
+import { TableRowId } from "@fluentui/react-table";
+import { RELOAD } from "Types/Reload";
 
 interface IPropsBBok {
-  start: boolean;
+  ListName: string;
 }
 
-const BBok: React.FC<IPropsBBok> = ({ start }) => {
-  [start];
-
+const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
   const [statusMessage, setStatusMessage] = useState<string | undefined>(
     "Welcome"
   );
 
   const [isAdding, setIsAdding] = useState(false);
 
-  const formDefaults: Partial<TCreateItemBase> = {
+  const defaultSelection = new Set<TableRowId>([0]);
+
+  const [selectedRows, setSelectedRows] =
+    useState<Set<TableRowId>>(defaultSelection);
+
+  const formDefaults: TSPListBaseCreate = {
     tagnr: "0",
     dateOfBirth: new Date(),
     damLookupId: 0,
@@ -33,12 +41,55 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
     gender: "Buck",
   };
 
-  const [formData, setFormData] =
-    useState<Partial<TCreateItemBase>>(formDefaults);
+  const [formData, setFormData] = useState<TSPListBaseCreate>(formDefaults);
+  const [editItemId, setEditItemId] = useState<string | undefined>();
+  const [ItemsData, setItemsData] = useState<Array<TSPListBaseRead>>();
+  const [validTagNrs, setValidTags] = useState<Array<IdTagNr> | undefined>();
 
-  const validTagNrs = [18, 0, 1, 2, 3, 4, 10, 15]
-    .sort((a, b) => a - b)
-    .map((h) => h.toString());
+  useEffect(() => {
+    window.eapi
+      .cloudGetItems<TSPListBaseRead>(
+        ListName,
+        `fields($select=id,tagnr,dateOfBirth,dam,sire,gender)`
+      )
+      .then((res) => {
+        if (res) {
+          setItemsData(res.value);
+          setValidTags(
+            res.value.map((j) => {
+              return ObjectMake<IdTagNr>({
+                ItemId: j.id,
+                TagNr: j.fields.tagnr,
+              });
+            })
+          );
+        }
+      });
+  }, [ListName]);
+
+  useEffect(() => {
+    if (selectedRows.has(0)) selectedRows.delete(0);
+  }, [selectedRows, setSelectedRows]);
+
+  useEffect(() => {
+    if (statusMessage === RELOAD) {
+      location.reload();
+    }
+  }, [setStatusMessage, statusMessage]);
+
+  // useEffect(() => {
+  //   if (ItemsData && editItemId) {
+  //     const focusItem = ItemsData.filter((J) => J.id === editItemId)[0];
+  //     setFormData({
+  //       tagnr: focusItem.fields.tagnr,
+  //       gender: focusItem.fields.gender,
+  //       dateOfBirth: new Date(focusItem.fields.dateOfBirth),
+  //       damLookupId: focusItem.fields.dam,
+  //       sireLookupId: focusItem.fields.sire,
+  //     });
+  //     setIsAdding(!isAdding);
+  //   }
+  // }, [editItemId, setEditItemId, ItemsData, setIsAdding, isAdding]);
 
   return (
     <ThemeProvider applyTo="body" theme={BaseTheme}>
@@ -46,22 +97,32 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
         onSubmit={(ev: React.FormEvent) => {
           ev.preventDefault();
 
-          const sData = { ...formData };
-          setFormData(formDefaults);
-          alert("submitting");
+          const sData: Partial<TSPListBaseCreate> = { ...formData };
 
-          if (formData.damLookupId === 0) delete sData.damLookupId;
-          if (formData.sireLookupId === 0) delete sData.sireLookupId;
+          setFormData(formDefaults);
+
+          if (sData.damLookupId === 0) delete sData.damLookupId;
+          if (sData.sireLookupId === 0) delete sData.sireLookupId;
 
           window.eapi
-            .cloudCreateItem<TReadItemBase>("base", sData)
+            .cloudCreateItem<TSPListBaseRead, Partial<TSPListBaseCreate>>(
+              ListName,
+              sData
+            )
             .then((res) => {
-              setStatusMessage(`${res.tagnr} saved as ${res.id}`);
+              const msg = `Tag Nr ${res.fields.tagnr} saved (${res.id})`;
+              setStatusMessage(msg);
+              setTimeout(() => {
+                setStatusMessage(RELOAD);
+              }, 3000);
+              window.eapi.localLogging("Info", "DATA-TRACK", msg);
+              setFormData(formDefaults);
+              setIsAdding(false);
             })
             .catch((err) => {
               if (err instanceof Error) {
                 if (
-                  err.message.indexOf("cloudCreateItem") !== -1 &&
+                  err.message.indexOf("cloudeCreateItem") !== -1 &&
                   err.message.indexOf("unique") !== -1
                 ) {
                   alert("Duplicate Tag Nr");
@@ -77,8 +138,12 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
             isAdding={isAdding}
             setIsAdding={setIsAdding}
             statusMessage={statusMessage}
+            selectedRows={selectedRows}
+            ValidTagNrs={validTagNrs}
+            setStatusMessage={setStatusMessage}
+            setEditItemId={setEditItemId}
           />
-          {isAdding && (
+          {isAdding && validTagNrs && (
             <ItemForm
               formData={formData}
               setFormData={setFormData}
@@ -87,13 +152,15 @@ const BBok: React.FC<IPropsBBok> = ({ start }) => {
           )}
         </Stack>
       </form>
-      {/* <BaseButton
-        onClick={() => {
-    
-        }}
-      >
-        TEST
-      </BaseButton> */}
+      <Stack>
+        {ItemsData && (
+          <Items
+            data={ItemsData}
+            selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
+          />
+        )}
+      </Stack>
     </ThemeProvider>
   );
 };
@@ -102,7 +169,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<BBok start />} />
+        <Route path="/" element={<BBok ListName={"base"} />} />
       </Routes>
     </Router>
   );

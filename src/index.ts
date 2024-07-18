@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog, session } from "electron";
 import { Say } from "Local/logger/Logger";
 import cloudCreateItem from "Server/ipc/cloudCreateItem";
+import cloudDeleteItems from "Server/ipc/cloudDeleteItems";
+import cloudGetItems from "Server/ipc/cloudGetItems";
 import SPInitSite from "Server/spInit";
 import { TErrorLevel } from "Types/local-logging-properties";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -63,19 +65,15 @@ const createWindow = (): void => {
       callback({
         responseHeaders: {
           ...details.responseHeaders,
-          "Content-Security-Policy": [
-            `default-src ${defaultCPS} *`,
-            `font-src ${defaultCPS} *`,
-            `img-src ${defaultCPS} *`,
-            `style-src ${defaultCPS} *`,
-            `font-src ${defaultCPS} *`,
-          ],
+          "Content-Security-Policy": [`default-src ${defaultCPS} *`, `font-src ${defaultCPS} *`, `img-src ${defaultCPS} *`, `style-src ${defaultCPS} *`, `font-src ${defaultCPS} *`],
         },
       });
     });
 
     ipcMain.handle("dialog:openFile", handleFileOpen);
     ipcMain.handle("cloudCreateItem", cloudCreateItem);
+    ipcMain.handle("cloudGetItems", cloudGetItems);
+    ipcMain.handle("cloudDeleteItems", cloudDeleteItems);
   });
 
   // and load the index.html of the app.

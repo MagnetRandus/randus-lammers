@@ -4,6 +4,10 @@
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": ".webpack/main",
+  "engines": {
+    "node": "20.x",
+    "npm": "^10"
+  },
   "scripts": {
     "start": "electron-forge start -- --inspect-electron",
     "start:nodemon": "nodemon",
@@ -28,6 +32,7 @@
     "@electron/fuses": "^1.8.0",
     "@formatjs/ts-transformer": "^3.13.14",
     "@types/electron": "^1.6.10",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/underscore": "^1.11.15",
@@ -55,7 +60,7 @@
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.10",
     "tsconfig-paths-webpack-plugin": "^4.1.0",
-    "typescript": "~4.5.4",
+    "typescript": "^5.5.3",
     "webpack-dev-server": "^5.0.4",
     "winston": "^3.13.0"
   },
@@ -74,6 +79,7 @@
     "ajv": "^8.16.0",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^9.0.0",
+    "jsonwebtoken": "^9.0.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.23.1",

@@ -1,7 +1,8 @@
 import IGraphListItem from "Interfaces/SP/graph-listitem";
+import { FieldsCustom } from "Interfaces/SP/graph-listitem-field";
 import { Gender } from "Types/Gender";
 
-export interface IGraphListItemCustomFieldRead {
+interface IGraphListItemCustomFieldRead {
   tagnr: string;
   dateOfBirth: Date;
   sire: number;
@@ -9,9 +10,21 @@ export interface IGraphListItemCustomFieldRead {
   gender: Gender;
 }
 
-export type WithSPFields<T> = T & IGraphListItem;
+/**
+ * This type provide the default SharePoint List interface, plus the custom added fields
+ */
+export type TSPListBaseRead = IGraphListItem<FieldsCustom<IGraphListItemCustomFieldRead>>;
 
-export type IGraphLIstItemCustomFieldCreate<T extends IGraphListItemCustomFieldRead> = Omit<T, "sire" | "dam"> & { damLookupId: number; sireLookupId: number };
+export type TSPListBaseReadItem = FieldsCustom<IGraphListItemCustomFieldRead>;
 
-export type TCreateItemBase = IGraphLIstItemCustomFieldCreate<IGraphListItemCustomFieldRead>;
-export type TReadItemBase = WithSPFields<IGraphListItemCustomFieldRead>;
+/**
+ * Can write this as one, but its harder to read:
+    type TSPListBaseA<T> = Omit<T & {sireLookupId:number, damLookupId:number}, "sire" | "dam">;
+ */
+
+type TSPListBaseA<T> = Omit<T, "sire" | "dam">;
+type TSPListBaseAA<T> = TSPListBaseA<T> & { sireLookupId: number; damLookupId: number };
+
+export type TSPListBaseCreate = TSPListBaseAA<IGraphListItemCustomFieldRead>; //Type of Creating an item
+
+export type TSPListBaseUpdate = TSPListBaseCreate & { Id: number }; //Type for updating an item

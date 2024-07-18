@@ -6,15 +6,13 @@ import gphCreateItem from "Server/graph/item/create";
 import SPInitSite from "Server/spInit";
 import { RCloudCreateReturnItem } from "Types/cloud-item-create-rt";
 
-//(channel: string, listener: (event: Electron.IpcMainInvokeEvent, ...args: any[]) => (Promise<any>) | (any)): void
-async function cloudCreateItem<T>(event: IpcMainInvokeEvent, ...args: [string, any, any]): Promise<RCloudCreateReturnItem<T>> {
+async function cloudCreateItem<ReturnType, PayloadType>(event: IpcMainInvokeEvent, ...args: [string, PayloadType, any]): Promise<RCloudCreateReturnItem<ReturnType>> {
   const [listname, payload] = args;
 
   const spSiteInfo = await SPInitSite.getInstance();
   const siteInfo = await spSiteInfo.SiteRootInfo;
-  Say.getInstance().Info("Got site", siteInfo.displayName);
 
-  return new Promise<RCloudCreateReturnItem<T>>((resolve, reject) => {
+  return new Promise<RCloudCreateReturnItem<ReturnType>>((resolve, reject) => {
     gphCreateItem<any>(siteInfo.id, listname, payload)
       .then((res) => {
         resolve(res);

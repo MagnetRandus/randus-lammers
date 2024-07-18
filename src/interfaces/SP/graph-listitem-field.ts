@@ -22,4 +22,6 @@ interface Fields {
   AppEditorLookupId: string;
 }
 
+export type FieldsCustom<T> = Fields & T;
+
 export default Fields;

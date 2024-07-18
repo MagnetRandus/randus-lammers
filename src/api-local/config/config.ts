@@ -3,13 +3,15 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import { sep } from "path";
 import { ClientCredentialRequest, ConfidentialClientApplication, IConfidentialClientApplication, LogLevel } from "@azure/msal-node";
 import { readFile } from "fs/promises";
-import chalk from "chalk";
 import { sysProps } from "Interfaces/SysProps";
+import { decode, JwtPayload } from "jsonwebtoken";
+import { Say } from "Local/logger/Logger";
 
 class Config {
   private static instance: Config;
   private _props?: sysProps;
   private _client?: Client;
+  private tokenExpiry: number | null = null;
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   private constructor() {}
   get props() {
@@ -28,16 +30,10 @@ class Config {
   public static async getInstance(): Promise<Config> {
     if (!Config.instance) {
       Config.instance = new Config();
-      try {
-        await Config.instance.init();
-      } catch (err) {
-        if (err instanceof Error) {
-          console;
-        }
-        throw new Error("Could not get config");
-      }
+      await Config.instance.init();
+    } else if (Config.instance.isTokenExpired()) {
+      await Config.instance.init();
     }
-
     return Config.instance;
   }
   private async init() {
@@ -61,7 +57,7 @@ class Config {
       system: {
         loggerOptions: {
           loggerCallback(loglevel: LogLevel, message: string, containsPii: boolean) {
-            console.log(message);
+            Say.getInstance().Info(`graphclient-${loglevel}`, `${message} [containsPii:${containsPii}]`);
           },
           piiLoggingEnabled: false,
           logLevel: LogLevel.Info,
@@ -75,7 +71,22 @@ class Config {
 
     const response = await cca.acquireTokenByClientCredential(clientCredentialRequest);
 
-    console.log(chalk.greenBright(`Fetching token from SharePoint`));
+    if (response && response.accessToken) {
+      const decodedToken = decode(response.accessToken) as JwtPayload;
+      if (decodedToken && decodedToken.exp) {
+        this.tokenExpiry = decodedToken.exp * 1000; // Convert to milliseconds
+
+        this._client = Client.init({
+          authProvider: (done) => {
+            done(null, response.accessToken);
+          },
+        });
+
+        Say.getInstance().Info("graphclient", `Token Expires: ${response.expiresOn}`);
+      }
+    } else {
+      throw new Error("Failed to acquire token.");
+    }
 
     if (this._client === undefined) {
       this._client = Client.init({
@@ -84,9 +95,13 @@ class Config {
           done(null, response!.accessToken);
         },
       });
-    } else {
-      console.log(chalk.bgCyanBright(`Not re-init client`));
     }
+  }
+  isTokenExpired(): boolean {
+    if (!this.tokenExpiry) {
+      return true;
+    }
+    return new Date().getTime() > this.tokenExpiry;
   }
 }
 

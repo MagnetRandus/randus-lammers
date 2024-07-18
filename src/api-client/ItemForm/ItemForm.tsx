@@ -27,6 +27,8 @@ import {
 import React, { useState } from "react";
 import { Gender } from "Types/Gender";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
+import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
+import IdTagNr from "Interfaces/IdTagNr";
 
 initializeIcons();
 
@@ -87,9 +89,9 @@ const styleRadioButtons: Partial<
 };
 
 interface IPropsBBDetail {
-  formData: any;
-  setFormData: React.Dispatch<React.SetStateAction<Partial<any>>>;
-  validTagNrs: Array<string>;
+  formData: TSPListBaseCreate;
+  setFormData: React.Dispatch<React.SetStateAction<Partial<TSPListBaseCreate>>>;
+  validTagNrs: Array<IdTagNr>;
 }
 
 const ItemForm: React.FC<IPropsBBDetail> = ({
@@ -98,31 +100,29 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
   validTagNrs,
 }) => {
   const [tagnr, setTagnr] = useState<string | undefined>(formData.tagnr);
-  const [tagnrErrMsg, setTagnrErrMsg] = useState<string>("");
+  const [tagnrErrMsg, setTagNrErrMsg] = useState<string | undefined>();
 
-  const [gender, setGender] = useState<Gender | undefined>(
-    formData.gender || "Buck"
-  );
-  const [dob, setDob] = useState<Date | undefined>();
-  const [dobT, setDobT] = useState<Date | undefined>();
+  const [gender, setGender] = useState<Gender | undefined>(formData.gender);
+  const [dob, setDob] = useState<Date>(formData.dateOfBirth);
+  const [dobT, setDobT] = useState<Date>(formData.dateOfBirth);
 
-  const [sire, setSire] = useState<number>(0);
+  const [sire, setSire] = useState<string | undefined>();
   const [sireErrMsg, setSireErrMsg] = useState<string>("");
-  const [dam, setDam] = useState<number>(0);
+  const [dam, setDam] = useState<string | undefined>();
   const [damErrMsg, setDamErrMsg] = useState<string>("");
 
   const handleTagNr = (
     ev: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
   ) => {
     const value = ev.target.value;
-    if (validTagNrs.indexOf(value) === -1) {
+    if (validTagNrs.findIndex((j) => j.TagNr === value) === -1) {
       setTagnr(value);
       setFormData((pV) => {
         return { ...pV, tagnr: value };
       });
-      setTagnrErrMsg("");
+      setTagNrErrMsg(``);
     } else {
-      setTagnrErrMsg(`Please provide a valid value`);
+      setTagNrErrMsg(`Tag Nr [${value} is already allocated]`);
     }
   };
 
@@ -136,7 +136,7 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     });
   };
 
-  const handledobChange = (date: Date | undefined) => {
+  const handledobChange = (date: Date) => {
     setDob(date);
     setDobT(date);
     setFormData((pV) => {
@@ -144,10 +144,7 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     });
   };
 
-  const handleTimeChange = (
-    ev: React.FormEvent<IComboBox>,
-    value: Date | undefined
-  ) => {
+  const handleTimeChange = (ev: React.FormEvent<IComboBox>, value: Date) => {
     setDobT(value);
     setFormData((pV) => {
       return { ...pV, dateOfBirth: value };
@@ -158,18 +155,22 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: string
   ) => {
-    const v = parseInt(value || "0", 10);
-    const vI = isNaN(v) ? 0 : v;
+    const bbRefIdx = validTagNrs.findIndex((j) => {
+      return j.TagNr === value;
+    });
 
-    if (validTagNrs.includes(String(vI))) {
-      setDam(vI);
+    if (bbRefIdx !== -1) {
+      setDam(validTagNrs[bbRefIdx].TagNr);
       setFormData((pV) => {
-        return { ...pV, damLookupId: vI };
+        return {
+          ...pV,
+          damLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
+        };
       });
       setDamErrMsg("");
     } else {
-      setDam(0);
-      setDamErrMsg(`Valid selections are: ${validTagNrs.join(",")}`);
+      setDam(undefined);
+      setDamErrMsg(`Valid: ${validTagNrs.map((j) => j.TagNr).join(",")}`);
     }
   };
 
@@ -177,18 +178,22 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: string
   ) => {
-    const v = parseInt(value || "0", 10);
-    const vI = isNaN(v) ? 0 : v;
+    const bbRefIdx = validTagNrs.findIndex((j) => {
+      return j.TagNr === value;
+    });
 
-    if (validTagNrs.includes(String(vI))) {
-      setSire(vI);
+    if (bbRefIdx !== -1) {
+      setSire(validTagNrs[bbRefIdx].TagNr);
       setFormData((pV) => {
-        return { ...pV, sireLookupId: vI };
+        return {
+          ...pV,
+          sireLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
+        };
       });
       setSireErrMsg("");
     } else {
-      setSire(0);
-      setSireErrMsg(`Valid selections are: ${validTagNrs.join(",")}`);
+      setSire(undefined);
+      setSireErrMsg(`Valid: ${validTagNrs.map((j) => j.TagNr).join(",")}`);
     }
   };
 
