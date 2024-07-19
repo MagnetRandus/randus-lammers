@@ -17,6 +17,7 @@ import {
 
 import { useState } from "react";
 import CreateItemColumns from "./Columns";
+import styles from "./Items.module.scss";
 
 interface IPropsItems {
   data: Array<TSPListBaseRead>;
@@ -55,39 +56,44 @@ const Items: React.FC<IPropsItems> = ({
 
   return (
     <>
-      <DataGrid
-        items={dataFlat}
-        getRowId={(itm) => itm.tagnr}
-        sortable
-        columns={columns}
-        sortState={sortState}
-        onSortChange={onSortChange}
-        selectionMode="multiselect"
-        selectedItems={selectedRows}
-        onSelectionChange={onSelectionChange}
-        defaultSelectedItems={undefined}
-        defaultChecked={false}
-      >
-        <DataGridHeader>
-          <DataGridRow>
-            {({ renderHeaderCell }) => (
-              <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
-            )}
-          </DataGridRow>
-        </DataGridHeader>
-        <DataGridBody<ItemType>>
-          {({ item, rowId }) => (
-            <DataGridRow<ItemType>
-              key={rowId}
-              selectionCell={{ radioIndicator: { "aria-label": "Select row" } }}
-            >
-              {({ renderCell }) => (
-                <DataGridCell>{renderCell(item)}</DataGridCell>
+      <div className={styles.Items}>
+        <DataGrid
+          items={dataFlat}
+          getRowId={(itm) => itm.tagnr}
+          sortable
+          columns={columns}
+          sortState={sortState}
+          onSortChange={onSortChange}
+          selectionMode="multiselect"
+          selectedItems={selectedRows}
+          onSelectionChange={onSelectionChange}
+          defaultSelectedItems={undefined}
+          defaultChecked={false}
+          focusMode="composite"
+        >
+          <DataGridHeader>
+            <DataGridRow>
+              {({ renderHeaderCell }) => (
+                <DataGridHeaderCell>{renderHeaderCell()}</DataGridHeaderCell>
               )}
             </DataGridRow>
-          )}
-        </DataGridBody>
-      </DataGrid>
+          </DataGridHeader>
+          <DataGridBody<ItemType>>
+            {({ item, rowId }) => (
+              <DataGridRow<ItemType>
+                key={rowId}
+                selectionCell={{
+                  radioIndicator: { "aria-label": "Select row" },
+                }}
+              >
+                {({ renderCell }) => (
+                  <DataGridCell>{renderCell(item)}</DataGridCell>
+                )}
+              </DataGridRow>
+            )}
+          </DataGridBody>
+        </DataGrid>
+      </div>
     </>
   );
 };

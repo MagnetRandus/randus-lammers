@@ -3,6 +3,7 @@ import { Say } from "Local/logger/Logger";
 import cloudCreateItem from "Server/ipc/cloudCreateItem";
 import cloudDeleteItems from "Server/ipc/cloudDeleteItems";
 import cloudGetItems from "Server/ipc/cloudGetItems";
+import cloudUpdateItem from "Server/ipc/cloudUpdateItem";
 import SPInitSite from "Server/spInit";
 import { TErrorLevel } from "Types/local-logging-properties";
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -74,6 +75,7 @@ const createWindow = (): void => {
     ipcMain.handle("cloudCreateItem", cloudCreateItem);
     ipcMain.handle("cloudGetItems", cloudGetItems);
     ipcMain.handle("cloudDeleteItems", cloudDeleteItems);
+    ipcMain.handle("cloudUpdateItem", cloudUpdateItem);
   });
 
   // and load the index.html of the app.

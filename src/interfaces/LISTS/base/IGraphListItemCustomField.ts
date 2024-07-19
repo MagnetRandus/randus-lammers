@@ -23,8 +23,6 @@ export type TSPListBaseReadItem = FieldsCustom<IGraphListItemCustomFieldRead>;
  */
 
 type TSPListBaseA<T> = Omit<T, "sire" | "dam">;
-type TSPListBaseAA<T> = TSPListBaseA<T> & { sireLookupId: number; damLookupId: number };
+type TSPListBaseAA<T> = TSPListBaseA<T> & { sireLookupId: number | null; damLookupId: number | null };
 
 export type TSPListBaseCreate = TSPListBaseAA<IGraphListItemCustomFieldRead>; //Type of Creating an item
-
-export type TSPListBaseUpdate = TSPListBaseCreate & { Id: number }; //Type for updating an item

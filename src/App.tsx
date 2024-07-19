@@ -2,7 +2,12 @@
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import { createRoot } from "react-dom/client";
 import React, { useEffect, useState } from "react";
-import { Stack, ThemeProvider } from "@fluentui/react";
+import {
+  initializeIcons,
+  registerIcons,
+  Stack,
+  ThemeProvider,
+} from "@fluentui/react";
 import styles from "./App.module.scss";
 import BaseTheme from "Ux/BaseTheme";
 import ControlPanel from "Client/ControlPanel/ControlPanel";
@@ -15,7 +20,16 @@ import Items from "Client/Items/Items";
 import IdTagNr from "Interfaces/IdTagNr";
 import ObjectMake from "Tools/ObjectMake";
 import { TableRowId } from "@fluentui/react-table";
-import { RELOAD } from "Types/Reload";
+import { defaultSelection, formDefaults, RELOAD } from "Types/const";
+import {
+  AddIcon,
+  CalendarIcon,
+  CancelIcon,
+  ClearSelectionIcon,
+  DeleteIcon,
+  SaveAsIcon,
+  SaveIcon,
+} from "@fluentui/react-icons-mdl2";
 
 interface IPropsBBok {
   ListName: string;
@@ -26,26 +40,32 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
     "Welcome"
   );
 
-  const [isAdding, setIsAdding] = useState(false);
-
-  const defaultSelection = new Set<TableRowId>([0]);
-
+  const [editActive, SetEditActive] = useState<boolean>(false);
+  const [addActive, SetAddActive] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] =
     useState<Set<TableRowId>>(defaultSelection);
-
-  const formDefaults: TSPListBaseCreate = {
-    tagnr: "0",
-    dateOfBirth: new Date(),
-    damLookupId: 0,
-    sireLookupId: 0,
-    gender: "Buck",
-  };
-
-  const [formData, setFormData] = useState<TSPListBaseCreate>(formDefaults);
-  const [editItemId, setEditItemId] = useState<string | undefined>();
-  const [ItemsData, setItemsData] = useState<Array<TSPListBaseRead>>();
+  const [editItemId, setEditItemId] = useState<string>("0");
+  const [ItemsData, setItemsData] = useState<
+    Array<TSPListBaseRead> | undefined
+  >();
   const [validTagNrs, setValidTags] = useState<Array<IdTagNr> | undefined>();
 
+  const [formData, setFormData] = useState<TSPListBaseCreate | undefined>();
+
+  useEffect(() => {
+    initializeIcons();
+    registerIcons({
+      icons: {
+        calender: <CalendarIcon />,
+        iconCancel: <CancelIcon />,
+        iconSave: <SaveIcon />,
+        iconUpdate: <SaveAsIcon />,
+        iconAdd: <AddIcon />,
+        iconDelete: <DeleteIcon />,
+        iconClear: <ClearSelectionIcon />,
+      },
+    });
+  }, []);
   useEffect(() => {
     window.eapi
       .cloudGetItems<TSPListBaseRead>(
@@ -60,90 +80,135 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
               return ObjectMake<IdTagNr>({
                 ItemId: j.id,
                 TagNr: j.fields.tagnr,
+                Gender: j.fields.gender,
               });
             })
           );
         }
       });
   }, [ListName]);
-
+  useEffect(() => {
+    switch (statusMessage) {
+      case undefined:
+        console.log("message cleared");
+        break;
+      case RELOAD:
+        location.reload();
+        break;
+    }
+  }, [statusMessage]);
   useEffect(() => {
     if (selectedRows.has(0)) selectedRows.delete(0);
-  }, [selectedRows, setSelectedRows]);
-
-  useEffect(() => {
-    if (statusMessage === RELOAD) {
-      location.reload();
+    if (selectedRows.size === 1 && ItemsData) {
+      SetEditActive(true);
+      SetAddActive(false);
     }
-  }, [setStatusMessage, statusMessage]);
+    if (selectedRows.size === 0 || selectedRows.size > 1) {
+      setFormData(undefined);
+      SetEditActive(false);
+      setEditItemId("0");
+    }
+  }, [selectedRows, ItemsData, editActive]);
+  useEffect(() => {
+    if (editItemId !== "0" && ItemsData) {
+      selectedRows.forEach((v) => {
+        const FieldsToEdit = ItemsData.filter((j) => j.fields.tagnr === v)[0]
+          .fields;
 
-  // useEffect(() => {
-  //   if (ItemsData && editItemId) {
-  //     const focusItem = ItemsData.filter((J) => J.id === editItemId)[0];
-  //     setFormData({
-  //       tagnr: focusItem.fields.tagnr,
-  //       gender: focusItem.fields.gender,
-  //       dateOfBirth: new Date(focusItem.fields.dateOfBirth),
-  //       damLookupId: focusItem.fields.dam,
-  //       sireLookupId: focusItem.fields.sire,
-  //     });
-  //     setIsAdding(!isAdding);
-  //   }
-  // }, [editItemId, setEditItemId, ItemsData, setIsAdding, isAdding]);
+        if (FieldsToEdit) {
+          setFormData({
+            tagnr: FieldsToEdit.tagnr,
+            gender: FieldsToEdit.gender,
+            dateOfBirth: new Date(FieldsToEdit.dateOfBirth),
+            damLookupId: FieldsToEdit.dam,
+            sireLookupId: FieldsToEdit.sire,
+          });
+        }
+      });
+    }
+    if (editItemId === "0") {
+      setFormData(undefined);
+    }
+  }, [editItemId, ItemsData, selectedRows]);
+  useEffect(() => {
+    if (addActive) {
+      setFormData(formDefaults);
+    } else {
+      setFormData(undefined);
+    }
+  }, [addActive]);
 
   return (
     <ThemeProvider applyTo="body" theme={BaseTheme}>
       <form
         onSubmit={(ev: React.FormEvent) => {
           ev.preventDefault();
+          if (addActive) {
+            const sData: Partial<TSPListBaseCreate> = { ...formData };
 
-          const sData: Partial<TSPListBaseCreate> = { ...formData };
+            if (sData.damLookupId === 0) delete sData.damLookupId;
+            if (sData.sireLookupId === 0) delete sData.sireLookupId;
 
-          setFormData(formDefaults);
-
-          if (sData.damLookupId === 0) delete sData.damLookupId;
-          if (sData.sireLookupId === 0) delete sData.sireLookupId;
-
-          window.eapi
-            .cloudCreateItem<TSPListBaseRead, Partial<TSPListBaseCreate>>(
-              ListName,
-              sData
-            )
-            .then((res) => {
-              const msg = `Tag Nr ${res.fields.tagnr} saved (${res.id})`;
-              setStatusMessage(msg);
-              setTimeout(() => {
-                setStatusMessage(RELOAD);
-              }, 3000);
-              window.eapi.localLogging("Info", "DATA-TRACK", msg);
-              setFormData(formDefaults);
-              setIsAdding(false);
-            })
-            .catch((err) => {
-              if (err instanceof Error) {
-                if (
-                  err.message.indexOf("cloudeCreateItem") !== -1 &&
-                  err.message.indexOf("unique") !== -1
-                ) {
-                  alert("Duplicate Tag Nr");
-                  setFormData(formDefaults);
+            window.eapi
+              .cloudCreateItem<TSPListBaseRead, Partial<TSPListBaseCreate>>(
+                ListName,
+                sData
+              )
+              .then((res) => {
+                const msg = `Tag Nr ${res.fields.tagnr} saved (${res.id})`;
+                setStatusMessage(msg);
+                setTimeout(() => {
+                  setStatusMessage(RELOAD);
+                }, 3000);
+                window.eapi.localLogging("Info", "DATA-TRACK", msg);
+                setEditItemId("0");
+              })
+              .catch((err) => {
+                if (err instanceof Error) {
+                  if (
+                    err.message.indexOf("cloudeCreateItem") !== -1 &&
+                    err.message.indexOf("unique") !== -1
+                  ) {
+                    alert("Duplicate Tag Nr");
+                    setEditItemId("0");
+                  }
+                  setStatusMessage(err.message);
                 }
-                setStatusMessage(err.message);
-              }
-            });
+              });
+          }
+          if (editActive && formData) {
+            window.eapi
+              .cloudUpdateItem<
+                TSPListBaseRead,
+                TSPListBaseCreate
+              >(ListName, parseInt(editItemId, 10), formData)
+              .then((res) => {
+                const msg = `Tag Nr ${res.fields.tagnr} updated (${res.id})`;
+                setStatusMessage(msg);
+                setTimeout(() => {
+                  setStatusMessage(RELOAD);
+                }, 3000);
+                window.eapi.localLogging("Info", "DATA-TRACK", msg);
+                setEditItemId("0");
+              });
+          }
         }}
       >
         <Stack className={styles.Main}>
           <ControlPanel
-            isAdding={isAdding}
-            setIsAdding={setIsAdding}
             statusMessage={statusMessage}
             selectedRows={selectedRows}
+            setSelectedRows={setSelectedRows}
             ValidTagNrs={validTagNrs}
             setStatusMessage={setStatusMessage}
             setEditItemId={setEditItemId}
+            editItemId={editItemId}
+            SetEditActive={SetEditActive}
+            EditActive={editActive}
+            AddActive={addActive}
+            SetAddActive={SetAddActive}
           />
-          {isAdding && validTagNrs && (
+          {formData && validTagNrs && (
             <ItemForm
               formData={formData}
               setFormData={setFormData}

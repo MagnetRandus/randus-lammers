@@ -1,0 +1,18 @@
+@use "Ux/ColorScheme.scss" as colors;
+
+.Items {
+    border: inherit;
+}
+:root {
+    // --colorNeutralStrokeAccessible: green;
+    // --spacingHorizontalS: 5;
+    // --colorNeutralForeground1: blue;
+    --strokeWidthThin: #{colors.$desert-tan};
+    --borderRadiusCircular: 10px;
+    --spacingVerticalS: 3px;
+    --spacingHorizontalS: 3px;
+    // --colorCompoundBrandStroke: #{colors.$desert-tan};
+    --colorCompoundBrandForeground1: #{colors.$peach-beige};
+    // --colorNeutralForeground1Hover: #{colors.$desert-tan};
+    --colorSubtleBackgroundHover: #{colors.$almond-cream};
+}

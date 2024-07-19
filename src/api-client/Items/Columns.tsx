@@ -94,8 +94,8 @@ function CreateItemColumns(
       renderCell(item) {
         return (
           <TableCellLayout>
-            {item.sire ? (
-              <>{dataFlat.filter((j) => j.id === String(item.sire))[0].tagnr}</>
+            {item.dam ? (
+              <>{dataFlat.filter((j) => j.id === String(item.dam))[0].tagnr}</>
             ) : undefined}
           </TableCellLayout>
         );
@@ -104,9 +104,9 @@ function CreateItemColumns(
     createTableColumn<ItemType>({
       columnId: "sire",
       compare: (a, b) => {
-        if (a.dam === undefined) return 1;
-        if (b.dam === undefined) return -1;
-        return a.dam - b.dam;
+        if (a.sire === undefined) return 1;
+        if (b.sire === undefined) return -1;
+        return a.sire - b.sire;
       },
       renderHeaderCell() {
         return (
@@ -118,8 +118,8 @@ function CreateItemColumns(
       renderCell(item) {
         return (
           <TableCellLayout>
-            {item.dam ? (
-              <>{dataFlat.filter((j) => j.id === String(item.dam))[0].tagnr}</>
+            {item.sire ? (
+              <>{dataFlat.filter((j) => j.id === String(item.sire))[0].tagnr}</>
             ) : undefined}
           </TableCellLayout>
         );

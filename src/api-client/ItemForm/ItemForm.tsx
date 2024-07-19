@@ -5,7 +5,6 @@ import {
   IComboBox,
   IStackStyles,
   IStackTokens,
-  registerIcons,
   Stack,
   TextField,
   TimePicker,
@@ -15,37 +14,25 @@ import {
   IChoiceGroupStyleProps,
   IChoiceGroupStyles,
   IStyleFunctionOrObject,
+  BaseButton,
 } from "@fluentui/react";
 
-import { initializeIcons } from "@fluentui/react/lib/Icons";
-import {
-  CalendarIcon,
-  CancelIcon,
-  SaveIcon,
-  SaveAsIcon,
-} from "@fluentui/react-icons-mdl2";
 import React, { useState } from "react";
 import { Gender } from "Types/Gender";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
 import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 import IdTagNr from "Interfaces/IdTagNr";
-
-initializeIcons();
-
-registerIcons({
-  icons: {
-    calender: <CalendarIcon />,
-    iconCancel: <CancelIcon />,
-    iconSave: <SaveIcon />,
-    iconUpdate: <SaveAsIcon />,
-  },
-});
+import colorScheme from "Ux/ColorScheme";
+import { StackHorizStyles } from "Ux/StackHorizontal";
 
 const stackHorizStyles: IStackStyles = {
   root: [
     {
       marginRight: 10,
       minWidth: 125,
+      backgroundColor: colorScheme.almondCream,
+      paddingBottom: 12,
+      paddingLeft: 12,
     },
   ],
   inner: {
@@ -90,7 +77,9 @@ const styleRadioButtons: Partial<
 
 interface IPropsBBDetail {
   formData: TSPListBaseCreate;
-  setFormData: React.Dispatch<React.SetStateAction<Partial<TSPListBaseCreate>>>;
+  setFormData: React.Dispatch<
+    React.SetStateAction<Partial<TSPListBaseCreate> | undefined>
+  >;
   validTagNrs: Array<IdTagNr>;
 }
 
@@ -99,6 +88,17 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
   setFormData,
   validTagNrs,
 }) => {
+  const damtagNr = formData.damLookupId
+    ? validTagNrs.filter(
+        (j) => j.ItemId === formData.damLookupId?.toString()
+      )[0].TagNr
+    : undefined;
+  const siretagNr = formData.sireLookupId
+    ? validTagNrs.filter(
+        (j) => j.ItemId === formData.sireLookupId?.toString()
+      )[0].TagNr
+    : undefined;
+
   const [tagnr, setTagnr] = useState<string | undefined>(formData.tagnr);
   const [tagnrErrMsg, setTagNrErrMsg] = useState<string | undefined>();
 
@@ -106,9 +106,9 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
   const [dob, setDob] = useState<Date>(formData.dateOfBirth);
   const [dobT, setDobT] = useState<Date>(formData.dateOfBirth);
 
-  const [sire, setSire] = useState<string | undefined>();
+  const [sire, setSire] = useState<string | undefined>(siretagNr);
   const [sireErrMsg, setSireErrMsg] = useState<string>("");
-  const [dam, setDam] = useState<string | undefined>();
+  const [dam, setDam] = useState<string | undefined>(damtagNr);
   const [damErrMsg, setDamErrMsg] = useState<string>("");
 
   const handleTagNr = (
@@ -153,24 +153,44 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
 
   const handleDamChange = (
     ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
-    value: string
+    value: string | undefined
   ) => {
-    const bbRefIdx = validTagNrs.findIndex((j) => {
-      return j.TagNr === value;
-    });
+    if (value) {
+      const bbRefIdx = validTagNrs.findIndex((j) => {
+        return j.TagNr === value;
+      });
 
-    if (bbRefIdx !== -1) {
-      setDam(validTagNrs[bbRefIdx].TagNr);
+      if (bbRefIdx !== -1) {
+        if (validTagNrs[bbRefIdx].Gender === "Doe") {
+          setDam(validTagNrs[bbRefIdx].TagNr);
+          setFormData((pV) => {
+            return {
+              ...pV,
+              damLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
+            };
+          });
+          setDamErrMsg("");
+        } else {
+          setDamErrMsg("Can only be a doe");
+        }
+      } else {
+        setDam(undefined);
+        setDamErrMsg(
+          `Valid: ${validTagNrs
+            .filter((j) => j.Gender === "Doe")
+            .map((j) => j.TagNr)
+            .join(",")}`
+        );
+      }
+    } else {
+      setDam(undefined);
       setFormData((pV) => {
         return {
           ...pV,
-          damLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
+          damLookupId: null,
         };
       });
       setDamErrMsg("");
-    } else {
-      setDam(undefined);
-      setDamErrMsg(`Valid: ${validTagNrs.map((j) => j.TagNr).join(",")}`);
     }
   };
 
@@ -178,85 +198,120 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: string
   ) => {
-    const bbRefIdx = validTagNrs.findIndex((j) => {
-      return j.TagNr === value;
-    });
+    if (value) {
+      const bbRefIdx = validTagNrs.findIndex((j) => {
+        return j.TagNr === value;
+      });
 
-    if (bbRefIdx !== -1) {
-      setSire(validTagNrs[bbRefIdx].TagNr);
+      if (bbRefIdx !== -1) {
+        if (validTagNrs[bbRefIdx].Gender === "Buck") {
+          setSire(validTagNrs[bbRefIdx].TagNr);
+          setFormData((pV) => {
+            return {
+              ...pV,
+              sireLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
+            };
+          });
+          setSireErrMsg("");
+        } else {
+          setSire("Can only be a buck");
+        }
+      } else {
+        setSire(undefined);
+        setSireErrMsg(`Valid: ${validTagNrs.map((j) => j.TagNr).join(",")}`);
+      }
+    } else {
+      setSire(undefined);
       setFormData((pV) => {
         return {
           ...pV,
-          sireLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
+          sireLookupId: null,
         };
       });
       setSireErrMsg("");
-    } else {
-      setSire(undefined);
-      setSireErrMsg(`Valid: ${validTagNrs.map((j) => j.TagNr).join(",")}`);
     }
   };
 
   return (
-    <Stack>
-      <Stack horizontal styles={stackHorizStyles} tokens={stackHorizToken}>
-        <TextField
-          label="Tag Nr"
-          name="tagnr"
-          onChange={(ev, v) => setTagnr(v)}
-          type="string"
-          value={tagnr}
-          errorMessage={tagnrErrMsg}
-          styles={styledisablespinner}
-          onFocus={() => setTagnr("")}
-          onBlur={(ev) => handleTagNr(ev)}
-          autoFocus
-        />
-        <ChoiceGroup
-          label="Gender"
-          selectedKey={gender}
-          onChange={handleGenderChange}
-          options={[
-            { key: "Buck", text: "Buck" },
-            { key: "Doe", text: "Doe" },
-          ]}
-          styles={styleRadioButtons}
-        />
-        <DatePicker
-          label="Date of Birth"
-          style={{ width: "190px" }}
-          value={dob}
-          onSelectDate={handledobChange}
-          isRequired
-          firstDayOfWeek={DayOfWeek.Sunday}
-          strings={DatePickerStrings}
-        />
-        <TimePicker
-          label="Time of Birth"
-          value={dobT}
-          onChange={handleTimeChange}
-          disabled={!dob}
-        />
-        <TextField
-          label="Sire"
-          name="sire"
-          onChange={handleSireChange}
-          type="number"
-          value={sire?.toString()}
-          errorMessage={sireErrMsg}
-          styles={styledisablespinner}
-        />
-        <TextField
-          label="Dam"
-          name="dam"
-          onChange={handleDamChange}
-          type="number"
-          value={dam?.toString()}
-          errorMessage={damErrMsg}
-          styles={styledisablespinner}
-        />
+    <>
+      <Stack>
+        <Stack horizontal styles={stackHorizStyles} tokens={stackHorizToken}>
+          <TextField
+            label="Tag Nr"
+            name="tagnr"
+            onChange={(ev, v) => setTagnr(v)}
+            type="string"
+            value={tagnr}
+            errorMessage={tagnrErrMsg}
+            styles={styledisablespinner}
+            onFocus={() => setTagnr("")}
+            onBlur={(ev) => handleTagNr(ev)}
+            autoFocus={formData.tagnr === "0"}
+          />
+          <ChoiceGroup
+            label="Gender"
+            selectedKey={gender}
+            onChange={handleGenderChange}
+            options={[
+              { key: "Buck", text: "Buck" },
+              { key: "Doe", text: "Doe" },
+            ]}
+            styles={styleRadioButtons}
+          />
+          <DatePicker
+            label="Date of Birth"
+            style={{ width: "190px" }}
+            value={dob}
+            onSelectDate={handledobChange}
+            isRequired
+            firstDayOfWeek={DayOfWeek.Sunday}
+            strings={DatePickerStrings}
+          />
+          <TimePicker
+            label="Time of Birth"
+            value={dobT}
+            onChange={handleTimeChange}
+            disabled={!dob}
+          />
+          <TextField
+            label="Sire"
+            name="sire"
+            onChange={handleSireChange}
+            type="number"
+            value={sire?.toString()}
+            errorMessage={sireErrMsg}
+            styles={styledisablespinner}
+          />
+          <TextField
+            label="Dam"
+            name="dam"
+            onChange={handleDamChange}
+            type="number"
+            value={dam?.toString()}
+            errorMessage={damErrMsg}
+            styles={styledisablespinner}
+          />
+        </Stack>
       </Stack>
-    </Stack>
+      {formData.tagnr !== "0" && (
+        <Stack horizontal styles={StackHorizStyles} tokens={stackHorizToken}>
+          <BaseButton
+            onClick={() => {
+              console.log("do weight stuff");
+            }}
+          >
+            Weight
+          </BaseButton>
+          <BaseButton
+            onClick={() => {
+              console.log("do weight stuff");
+            }}
+          >
+            Medicine
+          </BaseButton>
+        </Stack>
+      )}
+    </>
   );
 };
 
