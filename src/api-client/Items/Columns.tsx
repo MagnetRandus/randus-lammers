@@ -66,7 +66,7 @@ function CreateItemColumns(
       renderHeaderCell() {
         return (
           <>
-            <b>Gender</b>
+            <b>Buck/Doe</b>
           </>
         );
       },

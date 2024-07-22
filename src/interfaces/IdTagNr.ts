@@ -1,9 +1,9 @@
-import { Gender } from "Types/Gender";
+import { BuckDoe } from "Types/BuckDoe";
 
 interface IdTagNr {
   TagNr: string;
   ItemId: string;
-  Gender: Gender;
+  Gender: BuckDoe;
 }
 
 export default IdTagNr;

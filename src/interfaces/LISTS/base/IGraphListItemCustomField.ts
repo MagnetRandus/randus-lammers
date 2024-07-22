@@ -1,13 +1,13 @@
 import IGraphListItem from "Interfaces/SP/graph-listitem";
 import { FieldsCustom } from "Interfaces/SP/graph-listitem-field";
-import { Gender } from "Types/Gender";
+import { BuckDoe } from "Types/BuckDoe";
 
 interface IGraphListItemCustomFieldRead {
   tagnr: string;
   dateOfBirth: Date;
   sire: number;
   dam: number;
-  gender: Gender;
+  gender: BuckDoe;
 }
 
 /**

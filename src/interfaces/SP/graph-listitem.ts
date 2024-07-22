@@ -18,7 +18,7 @@ interface IGraphListItem<CustomFields> {
   createdBy: CreatedBy;
   lastModifiedBy: LastModifiedBy;
   parentReference: ParentReference;
-  contentType: ContentType;
+  contentType: Partial<ContentType>;
   "fields@odata.context": string;
   fields: CustomFields;
 }

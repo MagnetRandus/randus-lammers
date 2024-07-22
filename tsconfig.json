@@ -51,5 +51,6 @@
   "files": [
     "src/preload.d.ts",
     "src/scss.d.ts",
+    "src/types/UOM.ts",
   ]
 }

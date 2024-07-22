@@ -1,68 +1,101 @@
-import { DatePicker, DayOfWeek, Stack, TextField } from "@fluentui/react";
+import {
+  DatePicker,
+  DayOfWeek,
+  IComboBox,
+  Stack,
+  TextField,
+  TimePicker,
+} from "@fluentui/react";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
+import { TSPLBWeightCreate } from "Interfaces/LISTS/trace/IGLICF-Weight";
 import { FocusEvent, useState } from "react";
 import Styledisablespinner from "Ux/SpinnerStyle";
 import { StackHorizStyles, stackHorizToken } from "Ux/StackHorizontal";
 
 interface IPropsTraceWeight {
-  start: boolean;
+  formData: TSPLBWeightCreate;
+  setFormData: React.Dispatch<
+    React.SetStateAction<Partial<TSPLBWeightCreate> | undefined>
+  >;
 }
 
-const TraceWeight: React.FC<IPropsTraceWeight> = () => {
-  const [weight, SetWeight] = useState<string | undefined>();
+const TraceWeight: React.FC<IPropsTraceWeight> = ({
+  setFormData,
+  formData,
+}) => {
+  const [weight, SetWeight] = useState<number | undefined>(formData.bbWeight);
+
   const [weightErr, SetWeightErr] = useState<string | undefined>();
-  const [when, setWhen] = useState<Date | undefined>();
-  const [whenT, setWhenT] = useState<Date | undefined>();
+  const [bbDate, SetBbDate] = useState<Date | undefined>(formData.bbDate);
 
   const blurWeight = (
     ev: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
   ) => {
-    [ev];
+    const value = parseFloat(ev.target.value);
+    if (value > 0) {
+      SetWeight(value);
+      setFormData((pV) => {
+        return {
+          ...pV,
+          bbWeight: value,
+        };
+      });
+      SetWeightErr(``);
+    } else {
+      SetWeightErr(`Weight must be greater than 0.0`);
+    }
   };
 
-  const changeDob = (date: Date) => {
-    setWhen(date);
-    setWhenT(date);
-    // setFormData((pV) => {
-    //   return { ...pV, dateOfBirth: date };
-    // });
+  const handleBbDateChange = (dateV: Date) => {
+    SetBbDate(dateV);
+    setFormData((pV) => {
+      return { ...pV, bbDate: dateV };
+    });
+  };
+
+  const handleBbDateTChange = (ev: React.FormEvent<IComboBox>, dateV: Date) => {
+    SetBbDate(dateV);
+    setFormData((pV) => {
+      return { ...pV, bbDate: dateV };
+    });
   };
 
   return (
     <>
-      <form
-        onSubmit={() => {
-          console.log("Submit Trace Weight");
-        }}
-      >
-        <Stack horizontal styles={StackHorizStyles} tokens={stackHorizToken}>
-          <TextField
-            label="Weight Kilogram"
-            name="weight"
-            onChange={(ev, v) => {
-              SetWeight(v);
-            }}
-            type="number"
-            value={weight}
-            errorMessage={weightErr}
-            styles={Styledisablespinner}
-            onFocus={() => {
-              [];
-            }}
-            onBlur={(ev) => blurWeight(ev)}
-            autoFocus
-          />
-          <DatePicker
-            label="When"
-            style={{ width: "190px" }}
-            value={when}
-            onSelectDate={changeDob}
-            isRequired
-            firstDayOfWeek={DayOfWeek.Sunday}
-            strings={DatePickerStrings}
-          />
-        </Stack>
-      </form>
+      <Stack horizontal styles={StackHorizStyles} tokens={stackHorizToken}>
+        <TextField
+          label="Weight"
+          name="weight"
+          title="Weight in kilogram"
+          onChange={(ev, v) => {
+            if (v) SetWeight(parseFloat(v));
+          }}
+          type="number"
+          value={String(weight)}
+          errorMessage={weightErr}
+          styles={Styledisablespinner}
+          onFocus={() => {
+            [];
+          }}
+          onBlur={(ev) => blurWeight(ev)}
+          autoFocus
+          description="kg"
+        />
+        <DatePicker
+          label="Measurement tate"
+          style={{ width: "190px" }}
+          value={bbDate}
+          onSelectDate={handleBbDateChange}
+          isRequired
+          firstDayOfWeek={DayOfWeek.Sunday}
+          strings={DatePickerStrings}
+        />
+        <TimePicker
+          label="Measurement time "
+          value={bbDate}
+          onChange={handleBbDateTChange}
+        />
+      </Stack>
     </>
   );
 };

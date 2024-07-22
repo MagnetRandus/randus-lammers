@@ -1,20 +1,16 @@
 import {
   Stack,
   BaseButton,
-  registerIcons,
   IIconProps,
   IStackStyles,
   IButtonStyles,
 } from "@fluentui/react";
 import { TableRowId } from "@fluentui/react-table";
 import IdTagNr from "Interfaces/IdTagNr";
+import { ResolveTagNr } from "Tools/ResolveTagNr";
 import { defaultSelection, RELOAD } from "Types/const";
 import colorScheme from "Ux/ColorScheme";
 import * as React from "react";
-
-registerIcons({
-  icons: {},
-});
 
 const stackStyle: Partial<IStackStyles> = {
   root: {
@@ -29,7 +25,6 @@ const stackStyle: Partial<IStackStyles> = {
     // border: `1px solid green`,
   },
 };
-
 const baseButtonStyles: IButtonStyles = {
   root: {
     width: 75,
@@ -40,7 +35,6 @@ const baseButtonStyles: IButtonStyles = {
     padding: 3,
   },
 };
-
 const saveIcon: IIconProps = {
   iconName: "iconSave",
   styles: {
@@ -54,26 +48,23 @@ const cancelIcon: IIconProps = {
   }, // Custom styles for the icon
 };
 const deletelIcon: IIconProps = {
-  iconName: "iconDelete",
+  iconName: "icondelete",
   styles: {
     root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
-
 const updateIcon: IIconProps = {
   iconName: "iconUpdate",
   styles: {
     root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
-
 const clearFilterIcon: IIconProps = {
-  iconName: "iconClear",
+  iconName: "iconclear",
   styles: {
     root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
-
 const addIcon: IIconProps = {
   iconName: "iconAdd",
   styles: {
@@ -97,6 +88,8 @@ interface IPropControlPanel {
   SetEditActive: React.Dispatch<React.SetStateAction<boolean>>;
   AddActive: boolean;
   SetAddActive: React.Dispatch<React.SetStateAction<boolean>>;
+  TraceWeightActive: boolean;
+  SetTraceWeightActive: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const ControlPanel: React.FC<IPropControlPanel> = ({
@@ -111,11 +104,9 @@ const ControlPanel: React.FC<IPropControlPanel> = ({
   SetEditActive,
   AddActive,
   SetAddActive,
+  SetTraceWeightActive,
+  TraceWeightActive,
 }) => {
-  React.useEffect(() => {
-    console.log(`Control Panel ItemId: ${editItemId}`);
-  }, [editItemId]);
-
   const [disableEditBtn, SetDisableEditButton] = React.useState<boolean>(false);
   const [disableDelBtn, SetDisableDelButton] = React.useState<boolean>(false);
 
@@ -124,19 +115,19 @@ const ControlPanel: React.FC<IPropControlPanel> = ({
       <>
         {!AddActive && selectedRows.size == 0 && (
           <BaseButton
+            title="Add"
             type="button"
             onClick={() => {
               SetAddActive(true);
             }}
             iconProps={addIcon}
-            title="Add"
             styles={baseButtonStyles}
           >
             Add
           </BaseButton>
         )}
 
-        {(AddActive || editItemId !== "0") && (
+        {(TraceWeightActive || AddActive || editItemId !== "0") && (
           <>
             <BaseButton
               title="Save"
@@ -180,27 +171,41 @@ const ControlPanel: React.FC<IPropControlPanel> = ({
         )}
       </>
       {EditActive && (
-        <BaseButton
-          hidden={disableEditBtn}
-          title="Edit"
-          iconProps={updateIcon}
-          styles={baseButtonStyles}
-          onClick={() => {
-            if (ValidTagNrs) {
-              const updateIds = new Array<string>();
-              selectedRows.forEach((tagNr) => {
-                const SelRef = ValidTagNrs.find((h) => h?.TagNr === tagNr);
-                if (SelRef) updateIds.push(SelRef.ItemId.toString());
-              });
-
-              setEditItemId(updateIds[0]);
-              SetDisableEditButton(true);
-              SetDisableDelButton(true);
-            }
-          }}
-        >
-          Edit
-        </BaseButton>
+        <>
+          <BaseButton
+            hidden={disableEditBtn}
+            title="Edit"
+            iconProps={updateIcon}
+            styles={baseButtonStyles}
+            onClick={() => {
+              if (ValidTagNrs) {
+                setEditItemId(ResolveTagNr(selectedRows, ValidTagNrs));
+                SetDisableEditButton(true);
+                SetDisableDelButton(true);
+              }
+            }}
+          >
+            Edit
+          </BaseButton>
+          <BaseButton
+            styles={baseButtonStyles}
+            title="Weight"
+            onClick={() => {
+              SetTraceWeightActive(true);
+              SetEditActive(false);
+            }}
+          >
+            Weight
+          </BaseButton>
+          <BaseButton
+            styles={baseButtonStyles}
+            onClick={() => {
+              console.log("do Medicine stuff");
+            }}
+          >
+            Medicine
+          </BaseButton>
+        </>
       )}
       {selectedRows.size >= 1 && (
         <BaseButton

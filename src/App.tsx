@@ -20,7 +20,12 @@ import Items from "Client/Items/Items";
 import IdTagNr from "Interfaces/IdTagNr";
 import ObjectMake from "Tools/ObjectMake";
 import { TableRowId } from "@fluentui/react-table";
-import { defaultSelection, formDefaults, RELOAD } from "Types/const";
+import {
+  defaultSelection,
+  formDefaults,
+  RELOAD,
+  TraceWeightContentTypeId,
+} from "Types/const";
 import {
   AddIcon,
   CalendarIcon,
@@ -30,10 +35,29 @@ import {
   SaveAsIcon,
   SaveIcon,
 } from "@fluentui/react-icons-mdl2";
+import TraceWeight from "Client/Trace/Weight";
+import {
+  TSPLBWeightCreate,
+  TSPLBWeightRead,
+} from "Interfaces/LISTS/trace/IGLICF-Weight";
+import { ResolveTagNr } from "Tools/ResolveTagNr";
 
 interface IPropsBBok {
   ListName: string;
 }
+
+initializeIcons();
+registerIcons({
+  icons: {
+    calender: <CalendarIcon />,
+    iconCancel: <CancelIcon />,
+    iconSave: <SaveIcon />,
+    iconUpdate: <SaveAsIcon />,
+    iconAdd: <AddIcon />,
+    icondelete: <DeleteIcon />,
+    iconclear: <ClearSelectionIcon />,
+  },
+});
 
 const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
   const [statusMessage, setStatusMessage] = useState<string | undefined>(
@@ -52,20 +76,13 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
 
   const [formData, setFormData] = useState<TSPListBaseCreate | undefined>();
 
-  useEffect(() => {
-    initializeIcons();
-    registerIcons({
-      icons: {
-        calender: <CalendarIcon />,
-        iconCancel: <CancelIcon />,
-        iconSave: <SaveIcon />,
-        iconUpdate: <SaveAsIcon />,
-        iconAdd: <AddIcon />,
-        iconDelete: <DeleteIcon />,
-        iconClear: <ClearSelectionIcon />,
-      },
-    });
-  }, []);
+  const [formWeightData, setFormWeightData] = useState<
+    TSPLBWeightCreate | undefined
+  >();
+
+  const [traceWeightActive, SetTraceWeightActive] = useState<boolean>(false);
+
+  //#region UseEffect
   useEffect(() => {
     window.eapi
       .cloudGetItems<TSPListBaseRead>(
@@ -106,6 +123,7 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
     if (selectedRows.size === 0 || selectedRows.size > 1) {
       setFormData(undefined);
       SetEditActive(false);
+      SetTraceWeightActive(false);
       setEditItemId("0");
     }
   }, [selectedRows, ItemsData, editActive]);
@@ -137,6 +155,19 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
       setFormData(undefined);
     }
   }, [addActive]);
+  useEffect(() => {
+    if (traceWeightActive && validTagNrs && selectedRows) {
+      setEditItemId(ResolveTagNr(selectedRows, validTagNrs));
+      setFormWeightData({
+        bbDate: new Date(),
+        bbWeight: 0,
+        bbRefLookupId: parseInt(editItemId, 10),
+      });
+    } else {
+      setFormWeightData(undefined);
+    }
+  }, [validTagNrs, selectedRows, traceWeightActive, editItemId]);
+  //#endregion
 
   return (
     <ThemeProvider applyTo="body" theme={BaseTheme}>
@@ -152,7 +183,7 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
             window.eapi
               .cloudCreateItem<TSPListBaseRead, Partial<TSPListBaseCreate>>(
                 ListName,
-                sData
+                { fields: sData }
               )
               .then((res) => {
                 const msg = `Tag Nr ${res.fields.tagnr} saved (${res.id})`;
@@ -192,6 +223,28 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
                 setEditItemId("0");
               });
           }
+          if (traceWeightActive && formWeightData) {
+            SetEditActive(false);
+            window.eapi
+              .cloudCreateItem<TSPLBWeightRead, TSPLBWeightCreate>("trace", {
+                contentType: {
+                  id: TraceWeightContentTypeId,
+                },
+                fields: {
+                  ...formWeightData,
+                  bbRefLookupId: parseInt(editItemId, 10),
+                },
+              })
+              .then((res) => {
+                const msg = `Trace Added on ${res.fields.id}`;
+                setStatusMessage(msg);
+                setTimeout(() => {
+                  setStatusMessage(RELOAD);
+                }, 3000);
+                window.eapi.localLogging("Info", "DATA-TRACK", msg);
+                setEditItemId("0");
+              });
+          }
         }}
       >
         <Stack className={styles.Main}>
@@ -207,12 +260,20 @@ const BBok: React.FC<IPropsBBok> = ({ ListName }) => {
             EditActive={editActive}
             AddActive={addActive}
             SetAddActive={SetAddActive}
+            TraceWeightActive={traceWeightActive}
+            SetTraceWeightActive={SetTraceWeightActive}
           />
-          {formData && validTagNrs && (
+          {formData && validTagNrs && !traceWeightActive && (
             <ItemForm
               formData={formData}
               setFormData={setFormData}
               validTagNrs={validTagNrs}
+            />
+          )}
+          {formWeightData && traceWeightActive && (
+            <TraceWeight
+              formData={formWeightData}
+              setFormData={setFormWeightData}
             />
           )}
         </Stack>

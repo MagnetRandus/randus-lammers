@@ -14,16 +14,14 @@ import {
   IChoiceGroupStyleProps,
   IChoiceGroupStyles,
   IStyleFunctionOrObject,
-  BaseButton,
 } from "@fluentui/react";
 
 import React, { useState } from "react";
-import { Gender } from "Types/Gender";
+import { BuckDoe } from "Types/BuckDoe";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
 import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 import IdTagNr from "Interfaces/IdTagNr";
 import colorScheme from "Ux/ColorScheme";
-import { StackHorizStyles } from "Ux/StackHorizontal";
 
 const stackHorizStyles: IStackStyles = {
   root: [
@@ -102,7 +100,7 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
   const [tagnr, setTagnr] = useState<string | undefined>(formData.tagnr);
   const [tagnrErrMsg, setTagNrErrMsg] = useState<string | undefined>();
 
-  const [gender, setGender] = useState<Gender | undefined>(formData.gender);
+  const [gender, setGender] = useState<BuckDoe | undefined>(formData.gender);
   const [dob, setDob] = useState<Date>(formData.dateOfBirth);
   const [dobT, setDobT] = useState<Date>(formData.dateOfBirth);
 
@@ -126,13 +124,13 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     }
   };
 
-  const handleGenderChange = (
+  const handleBuckDoeChange = (
     event: React.FormEvent<HTMLInputElement>,
     option: IChoiceGroupOption
   ) => {
-    setGender(option.key as Gender);
+    setGender(option.key as BuckDoe);
     setFormData((pV) => {
-      return { ...pV, gender: option.key as Gender };
+      return { ...pV, gender: option.key as BuckDoe };
     });
   };
 
@@ -251,7 +249,7 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
           <ChoiceGroup
             label="Gender"
             selectedKey={gender}
-            onChange={handleGenderChange}
+            onChange={handleBuckDoeChange}
             options={[
               { key: "Buck", text: "Buck" },
               { key: "Doe", text: "Doe" },
@@ -293,24 +291,6 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
           />
         </Stack>
       </Stack>
-      {formData.tagnr !== "0" && (
-        <Stack horizontal styles={StackHorizStyles} tokens={stackHorizToken}>
-          <BaseButton
-            onClick={() => {
-              console.log("do weight stuff");
-            }}
-          >
-            Weight
-          </BaseButton>
-          <BaseButton
-            onClick={() => {
-              console.log("do weight stuff");
-            }}
-          >
-            Medicine
-          </BaseButton>
-        </Stack>
-      )}
     </>
   );
 };
