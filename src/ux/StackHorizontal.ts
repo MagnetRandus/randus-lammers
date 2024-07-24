@@ -1,22 +1,40 @@
 import { IStackStyles, IStackTokens } from "@fluentui/react";
-import colorScheme from "./ColorScheme";
 
-export const StackHorizStyles: IStackStyles = {
-  root: [
-    {
-      marginRight: 10,
-      minWidth: 125,
-      backgroundColor: colorScheme.almondCream,
-      paddingBottom: 12,
-      paddingLeft: 12,
+interface IHorizStackOpts {
+  bgColor: string;
+  bordercolor: string;
+  gap?: number;
+  childrenGap?: number;
+  paddingTop?: number;
+  paddingLeft?: number;
+  paddingBottom?: number;
+  marginBottom?: number;
+  minWidth?: number;
+}
+
+export function HorizStack(opts: IHorizStackOpts): [IStackStyles, IStackTokens] {
+  const StackHorizStyles: IStackStyles = {
+    root: [
+      {
+        backgroundColor: opts.bgColor,
+        border: `1px solid ${opts.bordercolor}`,
+        minWidth: opts.minWidth ?? 125,
+        paddingTop: opts.paddingTop ?? 12,
+        paddingLeft: opts.paddingLeft ?? 12,
+        paddingBottom: opts.paddingBottom ?? 12,
+        marginBottom: opts.marginBottom ?? 12,
+        gap: opts.gap ?? 7,
+      },
+    ],
+    inner: {
+      overflow: "hidden",
     },
-  ],
-  inner: {
-    overflow: "hidden",
-  },
-};
+  };
 
-export const stackHorizToken: IStackTokens = {
-  childrenGap: 10,
-  padding: 0,
-};
+  const stackHorizToken: IStackTokens = {
+    childrenGap: opts.childrenGap ? opts.childrenGap : 10,
+    padding: 0,
+  };
+
+  return [StackHorizStyles, stackHorizToken];
+}

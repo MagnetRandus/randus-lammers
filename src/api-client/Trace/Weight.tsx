@@ -9,8 +9,9 @@ import {
 import DatePickerStrings from "Interfaces/DatePickerStrings";
 import { TSPLBWeightCreate } from "Interfaces/LISTS/trace/IGLICF-Weight";
 import { FocusEvent, useState } from "react";
+import ThemeColor from "Ux/ColorScheme";
 import Styledisablespinner from "Ux/SpinnerStyle";
-import { StackHorizStyles, stackHorizToken } from "Ux/StackHorizontal";
+import { HorizStack } from "Ux/StackHorizontal";
 
 interface IPropsTraceWeight {
   formData: TSPLBWeightCreate;
@@ -59,6 +60,13 @@ const TraceWeight: React.FC<IPropsTraceWeight> = ({
       return { ...pV, bbDate: dateV };
     });
   };
+  const [StackHorizStyles, stackHorizToken] = HorizStack({
+    bgColor: ThemeColor.almondCream,
+    bordercolor: ThemeColor.peachBeige,
+    gap: 0,
+    childrenGap: 0,
+    marginBottom: 0,
+  });
 
   return (
     <>
@@ -82,7 +90,7 @@ const TraceWeight: React.FC<IPropsTraceWeight> = ({
           description="kg"
         />
         <DatePicker
-          label="Measurement tate"
+          label="Measurement date"
           style={{ width: "190px" }}
           value={bbDate}
           onSelectDate={handleBbDateChange}

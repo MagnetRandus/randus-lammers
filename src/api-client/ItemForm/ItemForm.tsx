@@ -3,8 +3,6 @@ import {
   DatePicker,
   DayOfWeek,
   IComboBox,
-  IStackStyles,
-  IStackTokens,
   Stack,
   TextField,
   TimePicker,
@@ -16,32 +14,20 @@ import {
   IStyleFunctionOrObject,
 } from "@fluentui/react";
 
-import React, { useState } from "react";
+import {
+  Dispatch,
+  FC,
+  FocusEvent,
+  FormEvent,
+  SetStateAction,
+  useState,
+} from "react";
 import { BuckDoe } from "Types/BuckDoe";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
 import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 import IdTagNr from "Interfaces/IdTagNr";
-import colorScheme from "Ux/ColorScheme";
-
-const stackHorizStyles: IStackStyles = {
-  root: [
-    {
-      marginRight: 10,
-      minWidth: 125,
-      backgroundColor: colorScheme.almondCream,
-      paddingBottom: 12,
-      paddingLeft: 12,
-    },
-  ],
-  inner: {
-    overflow: "hidden",
-  },
-};
-
-const stackHorizToken: IStackTokens = {
-  childrenGap: 10,
-  padding: 0,
-};
+import { HorizStack } from "Ux/StackHorizontal";
+import ThemeColor from "Ux/ColorScheme";
 
 const styledisablespinner: Partial<ITextFieldStyles> = {
   fieldGroup: {
@@ -75,16 +61,16 @@ const styleRadioButtons: Partial<
 
 interface IPropsBBDetail {
   formData: TSPListBaseCreate;
-  setFormData: React.Dispatch<
-    React.SetStateAction<Partial<TSPListBaseCreate> | undefined>
-  >;
+  setFormData: Dispatch<SetStateAction<Partial<TSPListBaseCreate> | undefined>>;
   validTagNrs: Array<IdTagNr>;
+  SetPageIsValid: Dispatch<SetStateAction<boolean>>;
 }
 
-const ItemForm: React.FC<IPropsBBDetail> = ({
+const ItemForm: FC<IPropsBBDetail> = ({
   formData,
   setFormData,
   validTagNrs,
+  SetPageIsValid,
 }) => {
   const damtagNr = formData.damLookupId
     ? validTagNrs.filter(
@@ -109,23 +95,36 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
   const [dam, setDam] = useState<string | undefined>(damtagNr);
   const [damErrMsg, setDamErrMsg] = useState<string>("");
 
+  const Validate = () => {
+    const a = tagnrErrMsg === undefined || tagnrErrMsg === "";
+    const b = sireErrMsg === undefined || sireErrMsg === "";
+    const c = damErrMsg === undefined || damErrMsg === "";
+    SetPageIsValid(a && b && c);
+  };
+
   const handleTagNr = (
-    ev: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
+    ev: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
   ) => {
     const value = ev.target.value;
-    if (validTagNrs.findIndex((j) => j.TagNr === value) === -1) {
-      setTagnr(value);
-      setFormData((pV) => {
-        return { ...pV, tagnr: value };
-      });
-      setTagNrErrMsg(``);
+    if (value) {
+      if (validTagNrs.findIndex((j) => j.TagNr === value) === -1) {
+        setTagnr(value);
+        setFormData((pV) => {
+          return { ...pV, tagnr: value };
+        });
+        setTagNrErrMsg(``);
+      } else {
+        setTagNrErrMsg(`Tag Nr [${value} is already allocated]`);
+      }
     } else {
-      setTagNrErrMsg(`Tag Nr [${value} is already allocated]`);
+      setTagNrErrMsg(`Provide a Tag Nr`);
     }
+
+    Validate();
   };
 
   const handleBuckDoeChange = (
-    event: React.FormEvent<HTMLInputElement>,
+    event: FormEvent<HTMLInputElement>,
     option: IChoiceGroupOption
   ) => {
     setGender(option.key as BuckDoe);
@@ -142,15 +141,25 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     });
   };
 
-  const handleTimeChange = (ev: React.FormEvent<IComboBox>, value: Date) => {
+  const handleTimeChange = (ev: FormEvent<IComboBox>, value: Date) => {
     setDobT(value);
     setFormData((pV) => {
       return { ...pV, dateOfBirth: value };
     });
   };
 
+  const validTagsFor = (buckDoe: BuckDoe): string => {
+    return validTagNrs
+      .filter((j) => j.Gender === buckDoe)
+      .sort((a, b) => {
+        return parseInt(a.TagNr, 10) - parseInt(b.TagNr, 10);
+      })
+      .map((j) => j.TagNr)
+      .join(",");
+  };
+
   const handleDamChange = (
-    ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ev: FormEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: string | undefined
   ) => {
     if (value) {
@@ -169,7 +178,7 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
           });
           setDamErrMsg("");
         } else {
-          setDamErrMsg("Can only be a doe");
+          setDamErrMsg(`Can only be a doe [${validTagsFor("Doe")}]`);
         }
       } else {
         setDam(undefined);
@@ -193,7 +202,7 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
   };
 
   const handleSireChange = (
-    ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ev: FormEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: string
   ) => {
     if (value) {
@@ -212,7 +221,7 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
           });
           setSireErrMsg("");
         } else {
-          setSire("Can only be a buck");
+          setSireErrMsg(`Can only be a buck [${validTagsFor("Buck")}]`);
         }
       } else {
         setSire(undefined);
@@ -230,66 +239,84 @@ const ItemForm: React.FC<IPropsBBDetail> = ({
     }
   };
 
+  const [StackHorizStyles, stackHorizToken] = HorizStack({
+    bgColor: ThemeColor.almondCream,
+    bordercolor: ThemeColor.peachBeige,
+    gap: 0,
+    childrenGap: 0,
+    marginBottom: 0,
+  });
+
   return (
     <>
-      <Stack>
-        <Stack horizontal styles={stackHorizStyles} tokens={stackHorizToken}>
-          <TextField
-            label="Tag Nr"
-            name="tagnr"
-            onChange={(ev, v) => setTagnr(v)}
-            type="string"
-            value={tagnr}
-            errorMessage={tagnrErrMsg}
-            styles={styledisablespinner}
-            onFocus={() => setTagnr("")}
-            onBlur={(ev) => handleTagNr(ev)}
-            autoFocus={formData.tagnr === "0"}
-          />
-          <ChoiceGroup
-            label="Gender"
-            selectedKey={gender}
-            onChange={handleBuckDoeChange}
-            options={[
-              { key: "Buck", text: "Buck" },
-              { key: "Doe", text: "Doe" },
-            ]}
-            styles={styleRadioButtons}
-          />
-          <DatePicker
-            label="Date of Birth"
-            style={{ width: "190px" }}
-            value={dob}
-            onSelectDate={handledobChange}
-            isRequired
-            firstDayOfWeek={DayOfWeek.Sunday}
-            strings={DatePickerStrings}
-          />
-          <TimePicker
-            label="Time of Birth"
-            value={dobT}
-            onChange={handleTimeChange}
-            disabled={!dob}
-          />
-          <TextField
-            label="Sire"
-            name="sire"
-            onChange={handleSireChange}
-            type="number"
-            value={sire?.toString()}
-            errorMessage={sireErrMsg}
-            styles={styledisablespinner}
-          />
-          <TextField
-            label="Dam"
-            name="dam"
-            onChange={handleDamChange}
-            type="number"
-            value={dam?.toString()}
-            errorMessage={damErrMsg}
-            styles={styledisablespinner}
-          />
-        </Stack>
+      <Stack horizontal styles={StackHorizStyles} tokens={stackHorizToken}>
+        <TextField
+          label="Tag Nr"
+          name="tagnr"
+          onChange={(ev, v) => setTagnr(v)}
+          type="string"
+          value={tagnr}
+          errorMessage={tagnrErrMsg}
+          styles={styledisablespinner}
+          onFocus={() => setTagnr("")}
+          onBlur={(ev) => handleTagNr(ev)}
+          autoFocus={formData.tagnr === "0"}
+          disabled={formData.tagnr !== "0"}
+        />
+        <ChoiceGroup
+          label="Gender"
+          selectedKey={gender}
+          onChange={handleBuckDoeChange}
+          options={[
+            { key: "Buck", text: "Buck" },
+            { key: "Doe", text: "Doe" },
+          ]}
+          styles={styleRadioButtons}
+          onBlur={() => Validate()}
+        />
+        <DatePicker
+          label="Date of Birth"
+          style={{ width: "190px" }}
+          value={dob}
+          onSelectDate={handledobChange}
+          isRequired
+          firstDayOfWeek={DayOfWeek.Sunday}
+          strings={DatePickerStrings}
+          onBlur={() => Validate()}
+        />
+        <TimePicker
+          label="Time of Birth"
+          value={dobT}
+          onChange={handleTimeChange}
+          disabled={!dob}
+          onBlur={() => Validate()}
+        />
+        <TextField
+          label="Sire"
+          name="sire"
+          onChange={handleSireChange}
+          type="number"
+          value={sire?.toString()}
+          errorMessage={sireErrMsg}
+          styles={styledisablespinner}
+          onBlur={() => Validate()}
+        />
+        <TextField
+          label="Dam"
+          name="dam"
+          onChange={handleDamChange}
+          type="number"
+          value={dam?.toString()}
+          errorMessage={damErrMsg}
+          styles={styledisablespinner}
+          onBlur={() => Validate()}
+          onKeyUp={(ev) => {
+            console.log(ev.key);
+            if (ev.key === "Backspace") {
+              (ev.target as HTMLInputElement).value = "undefined";
+            }
+          }}
+        />
       </Stack>
     </>
   );

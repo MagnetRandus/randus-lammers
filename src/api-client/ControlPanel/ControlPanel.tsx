@@ -7,15 +7,15 @@ import {
 } from "@fluentui/react";
 import { TableRowId } from "@fluentui/react-table";
 import IdTagNr from "Interfaces/IdTagNr";
-import { ResolveTagNr } from "Tools/ResolveTagNr";
-import { defaultSelection, RELOAD } from "Types/const";
-import colorScheme from "Ux/ColorScheme";
+import { ResolveTagNrToId } from "Tools/ResolveTagNr";
+import { rowDefaultSelection } from "Types/const";
+import ThemeColor from "Ux/ColorScheme";
 import * as React from "react";
 
 const stackStyle: Partial<IStackStyles> = {
   root: {
-    backgroundColor: colorScheme.almondCream,
-    border: `1px solid ${colorScheme.desertTan}`,
+    backgroundColor: ThemeColor.almondCream,
+    border: `1px solid ${ThemeColor.desertTan}`,
     gap: 7,
     padding: 4,
     marginTop: 7,
@@ -31,38 +31,38 @@ const baseButtonStyles: IButtonStyles = {
     height: 35,
     borderRadius: 7,
     borderWidth: 1,
-    borderColor: colorScheme.coralOrange,
+    borderColor: ThemeColor.coralOrange,
     padding: 3,
   },
 };
 const saveIcon: IIconProps = {
   iconName: "iconSave",
   styles: {
-    root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
+    root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
 const cancelIcon: IIconProps = {
   iconName: "iconCancel",
   styles: {
-    root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
+    root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
 const deletelIcon: IIconProps = {
   iconName: "icondelete",
   styles: {
-    root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
+    root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
 const updateIcon: IIconProps = {
   iconName: "iconUpdate",
   styles: {
-    root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
+    root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
 const clearFilterIcon: IIconProps = {
   iconName: "iconclear",
   styles: {
-    root: { marginTop: -3, color: colorScheme.coralOrange, fontSize: 20 },
+    root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
 const addIcon: IIconProps = {
@@ -70,7 +70,7 @@ const addIcon: IIconProps = {
   styles: {
     root: {
       marginTop: -3,
-      color: colorScheme.coralOrange,
+      color: ThemeColor.coralOrange,
       fontSize: 20,
     },
   }, // Custom styles for the icon
@@ -78,18 +78,11 @@ const addIcon: IIconProps = {
 
 interface IPropControlPanel {
   statusMessage: string | undefined;
+  setStatusMessage: React.Dispatch<React.SetStateAction<string | undefined>>;
   selectedRows: Set<TableRowId>;
   setSelectedRows: React.Dispatch<React.SetStateAction<Set<TableRowId>>>;
-  setStatusMessage: React.Dispatch<React.SetStateAction<string | undefined>>;
   ValidTagNrs: Array<IdTagNr> | undefined;
-  editItemId: string;
   setEditItemId: React.Dispatch<React.SetStateAction<string | undefined>>;
-  EditActive: boolean;
-  SetEditActive: React.Dispatch<React.SetStateAction<boolean>>;
-  AddActive: boolean;
-  SetAddActive: React.Dispatch<React.SetStateAction<boolean>>;
-  TraceWeightActive: boolean;
-  SetTraceWeightActive: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const ControlPanel: React.FC<IPropControlPanel> = ({
@@ -98,169 +91,136 @@ const ControlPanel: React.FC<IPropControlPanel> = ({
   selectedRows,
   setSelectedRows,
   ValidTagNrs,
-  editItemId,
   setEditItemId,
-  EditActive,
-  SetEditActive,
-  AddActive,
-  SetAddActive,
-  SetTraceWeightActive,
-  TraceWeightActive,
 }) => {
-  const [disableEditBtn, SetDisableEditButton] = React.useState<boolean>(false);
-  const [disableDelBtn, SetDisableDelButton] = React.useState<boolean>(false);
+  const [statusMsgTitle, SetStatusMsgTitle] = React.useState<string>(
+    "Status Message Information"
+  );
 
   return (
     <Stack horizontal styles={stackStyle}>
-      <>
-        {!AddActive && selectedRows.size == 0 && (
-          <BaseButton
-            title="Add"
-            type="button"
-            onClick={() => {
-              SetAddActive(true);
-            }}
-            iconProps={addIcon}
-            styles={baseButtonStyles}
-          >
-            Add
-          </BaseButton>
-        )}
-
-        {(TraceWeightActive || AddActive || editItemId !== "0") && (
-          <>
-            <BaseButton
-              title="Save"
-              iconProps={saveIcon}
-              type="submit"
-              styles={baseButtonStyles}
-              onClick={() => {
-                SetDisableEditButton(false);
-                SetDisableDelButton(false);
-              }}
-            >
-              Save
-            </BaseButton>
-            <BaseButton
-              iconProps={cancelIcon}
-              title="Cancel"
-              styles={baseButtonStyles}
-              onClick={() => {
-                setEditItemId("0");
-                SetAddActive(false);
-                SetEditActive(false);
-                SetDisableEditButton(false);
-                SetDisableDelButton(false);
-              }}
-            >
-              Cancel
-            </BaseButton>
-          </>
-        )}
-        {selectedRows.size !== 0 && (
-          <BaseButton
-            title="Clear Selection"
-            styles={baseButtonStyles}
-            iconProps={clearFilterIcon}
-            onClick={() => {
-              setSelectedRows(defaultSelection);
-            }}
-          >
-            Clear
-          </BaseButton>
-        )}
-      </>
-      {EditActive && (
-        <>
-          <BaseButton
-            hidden={disableEditBtn}
-            title="Edit"
-            iconProps={updateIcon}
-            styles={baseButtonStyles}
-            onClick={() => {
-              if (ValidTagNrs) {
-                setEditItemId(ResolveTagNr(selectedRows, ValidTagNrs));
-                SetDisableEditButton(true);
-                SetDisableDelButton(true);
-              }
-            }}
-          >
-            Edit
-          </BaseButton>
-          <BaseButton
-            styles={baseButtonStyles}
-            title="Weight"
-            onClick={() => {
-              SetTraceWeightActive(true);
-              SetEditActive(false);
-            }}
-          >
-            Weight
-          </BaseButton>
-          <BaseButton
-            styles={baseButtonStyles}
-            onClick={() => {
-              console.log("do Medicine stuff");
-            }}
-          >
-            Medicine
-          </BaseButton>
-        </>
-      )}
-      {selectedRows.size >= 1 && (
+      {selectedRows.size !== 0 && (
         <BaseButton
-          hidden={disableDelBtn}
-          title="Delete"
-          iconProps={deletelIcon}
+          title="Clear Selection"
           styles={baseButtonStyles}
+          iconProps={clearFilterIcon}
           onClick={() => {
-            if (ValidTagNrs) {
-              const deleteIds = new Array<string>();
-              selectedRows.forEach((tagNr) => {
-                const SelRef = ValidTagNrs.find((h) => h?.TagNr === tagNr);
-                if (SelRef) {
-                  deleteIds.push(SelRef.ItemId.toString());
-                } else {
-                  window.eapi.localLogging(
-                    "Error",
-                    "Bad Integrity",
-                    `Couldn't resolve TagNr:[${tagNr}] to ItemId.`
-                  );
-                }
-              });
-              window.eapi
-                .cloudDeleteItems<Array<string>>("base", deleteIds)
-                .then(() => {
-                  setStatusMessage(`Deleted ${deleteIds.join(`,`)}`);
-                  setTimeout(() => {
-                    setStatusMessage(RELOAD);
-                  }, 3000);
-                })
-                .catch((err) => {
-                  if ("message" in err) {
-                    setStatusMessage(`Error: ${err.message}`);
-                  }
-                  window.eapi.localLogging(
-                    "Error",
-                    "eapi.cloudDeleteItems",
-                    err
-                  );
-                });
-            } else {
-              window.eapi.localLogging(
-                "Error",
-                "Bad Integrity",
-                `ValidTagNrs is undefined`
-              );
-            }
+            setSelectedRows(rowDefaultSelection);
           }}
         >
-          Delete
+          Clear
         </BaseButton>
       )}
+      <BaseButton
+        title="Add"
+        type="button"
+        onClick={() => {
+          // SetAddActive(true);
+        }}
+        iconProps={addIcon}
+        styles={baseButtonStyles}
+      >
+        Add
+      </BaseButton>
+
+      <BaseButton
+        title="Save"
+        iconProps={saveIcon}
+        type="submit"
+        styles={baseButtonStyles}
+        onClick={() => {
+          //Save clicked
+        }}
+      >
+        Save
+      </BaseButton>
+
+      <BaseButton
+        iconProps={cancelIcon}
+        title="Cancel"
+        styles={baseButtonStyles}
+        onClick={() => {
+          console.log("Cancel Clicked");
+        }}
+      >
+        Cancel
+      </BaseButton>
+      <BaseButton
+        // hidden={DisableEditButton}
+        title="Edit"
+        iconProps={updateIcon}
+        styles={baseButtonStyles}
+        onClick={() => {
+          if (ValidTagNrs) {
+            setEditItemId(
+              ResolveTagNrToId(selectedRows, ValidTagNrs).toString()
+            );
+          }
+        }}
+      >
+        Edit
+      </BaseButton>
+      <BaseButton
+        styles={baseButtonStyles}
+        title="Weight"
+        onClick={() => {
+          // SetTraceWeightActive(true);
+          // SetEditActive(false);
+        }}
+      >
+        Weight
+      </BaseButton>
+      <BaseButton
+        styles={baseButtonStyles}
+        onClick={() => {
+          console.log("do Medicine stuff");
+        }}
+      >
+        Medicine
+      </BaseButton>
+      <BaseButton
+        title="Delete"
+        iconProps={deletelIcon}
+        styles={baseButtonStyles}
+        onClick={() => {
+          if (ValidTagNrs) {
+            for (const tagNrSelected of selectedRows) {
+              ValidTagNrs.map(async (j) => {
+                if (j.TagNr === tagNrSelected) {
+                  try {
+                    await window.eapi.cloudDeleteItems<Array<string>>("base", [
+                      j.ItemId,
+                    ]);
+                  } catch (error) {
+                    setStatusMessage(`Could not delete ${j.Gender}-${j.TagNr}`);
+                    SetStatusMsgTitle(error.message);
+                    window.eapi.localLogging(
+                      "Error",
+                      `Couldn't delete ${j.Gender}-${j.TagNr}`,
+                      `---${error.message}`
+                    );
+                  }
+                }
+              });
+            }
+          } else {
+            window.eapi.localLogging(
+              "Error",
+              "Bad Integrity",
+              `ValidTagNrs is undefined`
+            );
+          }
+        }}
+      >
+        Delete
+      </BaseButton>
 
       <Stack grow />
-      {statusMessage && <div>{statusMessage}</div>}
+      {statusMessage && (
+        <div title={statusMsgTitle} style={{ maxWidth: 500 }}>
+          {statusMessage}
+        </div>
+      )}
     </Stack>
   );
 };
