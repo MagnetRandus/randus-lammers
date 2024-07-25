@@ -15,14 +15,14 @@ import {
   TSPListBaseRead,
 } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 import Items from "Client/Items/Items";
-import IdTagNr from "Interfaces/IdTagNr";
+import IBBIdent from "Interfaces/IdTagNr";
 import ObjectMake from "Tools/ObjectMake";
 import { TableRowId } from "@fluentui/react-table";
 import {
   rowDefaultSelection,
   RELOAD,
   formDefaults,
-  FormDefaultsWeight,
+  FormDefaultsWeightInit,
   TraceWeightContentTypeId,
 } from "Types/const";
 import {
@@ -56,7 +56,7 @@ import ItemForm from "Client/ItemForm/ItemForm";
 import TraceWeight from "Client/Trace/Weight";
 import { HorizStack } from "Ux/StackHorizontal";
 import ThemeColor from "Ux/ColorScheme";
-import { ResolveTagNrToId } from "Tools/ResolveTagNr";
+import { BBIdentToItemId } from "Tools/BBIdent";
 
 initializeIcons();
 registerIcons({
@@ -101,7 +101,7 @@ const BBok: React.FC<IPropsBBok> = ({
     useState<Set<TableRowId>>(rowDefaultSelection);
 
   const [TagNr, SetTagNr] = useState<string>("0");
-  const [IdTagNrs, SetIdTagNrs] = useState<Array<IdTagNr> | undefined>();
+  const [BBIdents, SetBBIdents] = useState<Array<IBBIdent> | undefined>();
   const [ItemsData, setItemsData] = useState<
     Array<TSPListBaseRead> | undefined
   >();
@@ -117,18 +117,18 @@ const BBok: React.FC<IPropsBBok> = ({
       window.eapi
         .cloudGetItems<TSPListBaseRead>(
           BaseList,
-          `fields($select=id,tagnr,dateOfBirth,dam,sire,gender)`
+          `fields($select=id,tagnr,dateOfBirth,dam,sire,bbSks)`
         )
         .then((res) => {
-          console.log(`Fetched: ${ResetCount}`);
           if (res) {
             setItemsData(res.value);
-            SetIdTagNrs(
+            SetBBIdents(
               res.value.map((j) => {
-                return ObjectMake<IdTagNr>({
-                  ItemId: j.id,
+                return ObjectMake<IBBIdent>({
+                  ItemId: parseInt(j.id, 10),
                   TagNr: j.fields.tagnr,
-                  Gender: j.fields.gender,
+                  Sks: j.fields.bbSks,
+                  Weight: j.fields.bbWeight,
                 });
               })
             );
@@ -164,6 +164,11 @@ const BBok: React.FC<IPropsBBok> = ({
   useEffect(() => {
     switch (Mode) {
       case "Single":
+        SetModeEditing("None");
+        if (BBIdents && BBIdents.length !== 0)
+          setStatusMessage(
+            `Selected: ${BBIdentToItemId(SelectedRows, BBIdents)}`
+          );
         //Single means, an item is selected, but no action chosen; technically this will do nothing, but it is a separate state!
         break;
       case "Multiple":
@@ -176,15 +181,15 @@ const BBok: React.FC<IPropsBBok> = ({
         if (ModeEditing === "ItemAdd") {
           setFormData(formDefaults);
         }
-        if (ModeEditing === "WeightAdd" && IdTagNrs) {
+        if (ModeEditing === "WeightAdd" && BBIdents) {
           setFormWeightData(
-            FormDefaultsWeight(ResolveTagNrToId(SelectedRows, IdTagNrs))
+            FormDefaultsWeightInit(BBIdentToItemId(SelectedRows, BBIdents))
           );
         }
 
-        if (IdTagNrs)
+        if (BBIdents && BBIdents.length !== 0)
           setStatusMessage(
-            `${ModeEditing}:${IdTagNrs[0].Gender}-${IdTagNrs[0].TagNr}`
+            `${ModeEditing}:${BBIdents[0].Sks}-${BBIdents[0].TagNr}`
           );
 
         break;
@@ -210,10 +215,11 @@ const BBok: React.FC<IPropsBBok> = ({
         if (FieldsToEdit) {
           setFormData({
             tagnr: FieldsToEdit.tagnr,
-            gender: FieldsToEdit.gender,
+            bbSks: FieldsToEdit.bbSks,
+            bbWeight: FieldsToEdit.bbWeight,
             dateOfBirth: new Date(FieldsToEdit.dateOfBirth),
-            damLookupId: FieldsToEdit.dam,
-            sireLookupId: FieldsToEdit.sire,
+            damLookupId: FieldsToEdit.dam ? FieldsToEdit.dam : undefined,
+            sireLookupId: FieldsToEdit.sire ? FieldsToEdit.sire : undefined,
           });
         }
       });
@@ -282,7 +288,7 @@ const BBok: React.FC<IPropsBBok> = ({
                 ev.preventDefault();
                 (async () => {
                   if (ModeEditing === "ItemAdd") {
-                    if (IdTagNrs && formData) {
+                    if (BBIdents && formData) {
                       try {
                         await window.eapi.cloudCreateItem<
                           TSPListBaseRead,
@@ -299,15 +305,18 @@ const BBok: React.FC<IPropsBBok> = ({
                     }
                   }
                   if (ModeEditing === "ItemEdit") {
-                    if (IdTagNrs) {
+                    if (BBIdents && BBIdents.length !== 0) {
                       try {
-                        const itemId = ResolveTagNrToId(SelectedRows, IdTagNrs);
-                        window.eapi.cloudUpdateItem<
-                          TSPListBaseRead,
-                          TSPListBaseCreate
-                        >(BaseList, itemId, {
-                          fields: formData,
-                        });
+                        const itemId = BBIdentToItemId(SelectedRows, BBIdents);
+                        if (itemId) {
+                          await window.eapi.cloudUpdateItem<
+                            TSPListBaseRead,
+                            TSPListBaseCreate
+                          >(BaseList, itemId, {
+                            fields: formData,
+                          });
+                          SetMode("None");
+                        }
                       } catch (error) {
                         if ("message" in error) {
                           setStatusMessage(error.message);
@@ -316,6 +325,31 @@ const BBok: React.FC<IPropsBBok> = ({
                     }
                   }
                   if (ModeEditing === "WeightAdd" && formWeightData) {
+                    /**Add Weight to base profile */
+
+                    if (BBIdents && BBIdents.length !== 0) {
+                      try {
+                        const itemId = BBIdentToItemId(SelectedRows, BBIdents);
+                        if (itemId) {
+                          await window.eapi.cloudUpdateItem<
+                            TSPListBaseRead,
+                            Partial<TSPListBaseCreate>
+                          >(BaseList, itemId, {
+                            fields: {
+                              bbWeight: formWeightData.bbWeight,
+                            },
+                          });
+                          SetMode("None");
+                        }
+                      } catch (error) {
+                        if ("message" in error) {
+                          setStatusMessage(error.message);
+                        }
+                      }
+                    }
+
+                    /** Add Weight to Trace */
+
                     const traceItm = await window.eapi.cloudCreateItem<
                       TSPLBWeightRead,
                       TSPLBWeightCreate
@@ -325,6 +359,8 @@ const BBok: React.FC<IPropsBBok> = ({
                       },
                       fields: formWeightData,
                     });
+
+                    SetMode("Single");
 
                     window.eapi.localLogging(
                       "Info",
@@ -385,26 +421,29 @@ const BBok: React.FC<IPropsBBok> = ({
               </div>
             )}
           </Stack>
-          {ModeEditing === "ItemEdit" && formData && IdTagNrs && (
+          {ModeEditing === "ItemEdit" && formData && BBIdents && (
             <ItemForm
               formData={formData}
               setFormData={setFormData}
-              validTagNrs={IdTagNrs}
+              BBIdents={BBIdents}
               SetPageIsValid={SetPageIsValid}
+              setStatusMessage={setStatusMessage}
             />
           )}
-          {ModeEditing === "ItemAdd" && formData && IdTagNrs && (
+          {ModeEditing === "ItemAdd" && formData && BBIdents && (
             <ItemForm
               formData={formData}
               setFormData={setFormData}
-              validTagNrs={IdTagNrs}
+              BBIdents={BBIdents}
               SetPageIsValid={SetPageIsValid}
+              setStatusMessage={setStatusMessage}
             />
           )}
           {ModeEditing === "WeightAdd" && formWeightData && (
             <TraceWeight
               formData={formWeightData}
               setFormData={setFormWeightData}
+              SetPageIsValid={SetPageIsValid}
             />
           )}
         </Stack>

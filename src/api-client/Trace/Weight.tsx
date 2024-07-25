@@ -8,7 +8,7 @@ import {
 } from "@fluentui/react";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
 import { TSPLBWeightCreate } from "Interfaces/LISTS/trace/IGLICF-Weight";
-import { FocusEvent, useState } from "react";
+import { useEffect, useState } from "react";
 import ThemeColor from "Ux/ColorScheme";
 import Styledisablespinner from "Ux/SpinnerStyle";
 import { HorizStack } from "Ux/StackHorizontal";
@@ -18,48 +18,59 @@ interface IPropsTraceWeight {
   setFormData: React.Dispatch<
     React.SetStateAction<Partial<TSPLBWeightCreate> | undefined>
   >;
+  SetPageIsValid: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const TraceWeight: React.FC<IPropsTraceWeight> = ({
   setFormData,
   formData,
+  SetPageIsValid,
 }) => {
-  const [weight, SetWeight] = useState<number | undefined>(formData.bbWeight);
+  const { bbDate, bbWeight } = formData;
 
-  const [weightErr, SetWeightErr] = useState<string | undefined>();
-  const [bbDate, SetBbDate] = useState<Date | undefined>(formData.bbDate);
+  const [WeightErr, SetWeightErr] = useState<string | undefined>();
 
-  const blurWeight = (
-    ev: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
-  ) => {
-    const value = parseFloat(ev.target.value);
-    if (value > 0) {
-      SetWeight(value);
-      setFormData((pV) => {
-        return {
-          ...pV,
-          bbWeight: value,
-        };
-      });
+  useEffect(() => {
+    if (bbWeight && bbWeight > 0) {
       SetWeightErr(``);
     } else {
-      SetWeightErr(`Weight must be greater than 0.0`);
+      SetWeightErr(`Not valid`);
     }
+    if (!isNaN(Date.parse(bbDate.toDateString()))) {
+      SetWeightErr("");
+    } else {
+      SetWeightErr("Not valid");
+    }
+  }, [bbDate, bbWeight]);
+
+  const handleWeightChange = (
+    ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>,
+    value: string | undefined
+  ) => {
+    setFormData((pV) => {
+      return {
+        ...pV,
+        bbWeight: value ? parseFloat(value) : undefined,
+      };
+    });
   };
 
   const handleBbDateChange = (dateV: Date) => {
-    SetBbDate(dateV);
     setFormData((pV) => {
       return { ...pV, bbDate: dateV };
     });
   };
 
   const handleBbDateTChange = (ev: React.FormEvent<IComboBox>, dateV: Date) => {
-    SetBbDate(dateV);
     setFormData((pV) => {
       return { ...pV, bbDate: dateV };
     });
   };
+
+  useEffect(() => {
+    SetPageIsValid(WeightErr == undefined || WeightErr == "");
+  }, [WeightErr, SetPageIsValid]);
+
   const [StackHorizStyles, stackHorizToken] = HorizStack({
     bgColor: ThemeColor.almondCream,
     bordercolor: ThemeColor.peachBeige,
@@ -75,17 +86,24 @@ const TraceWeight: React.FC<IPropsTraceWeight> = ({
           label="Weight"
           name="weight"
           title="Weight in kilogram"
-          onChange={(ev, v) => {
-            if (v) SetWeight(parseFloat(v));
-          }}
+          onChange={(ev, v) => handleWeightChange(ev, v)}
           type="number"
-          value={String(weight)}
-          errorMessage={weightErr}
+          value={String(bbWeight)}
+          errorMessage={WeightErr}
           styles={Styledisablespinner}
-          onFocus={() => {
+          onBlur={() => {
             [];
           }}
-          onBlur={(ev) => blurWeight(ev)}
+          onKeyUp={(ev) => {
+            if (ev.key === "Backspace") {
+              setFormData((pV) => {
+                return {
+                  ...pV,
+                  bbWeight: undefined,
+                };
+              });
+            }
+          }}
           autoFocus
           description="kg"
         />

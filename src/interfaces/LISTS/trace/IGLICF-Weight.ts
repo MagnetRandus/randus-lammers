@@ -12,6 +12,6 @@ export type TSPLBWeightRead = IGraphListItem<FieldsCustom<IGCLICFWeight>>; //has
 export type TSPLBWeightReadItem = FieldsCustom<IGCLICFWeight>;
 
 type TSPListBaseA<T> = Omit<T, "bbRef">;
-type TSPListBaseAA<T> = TSPListBaseA<T> & { bbRefLookupId: number | null };
+type TSPListBaseAA<T> = TSPListBaseA<T> & { bbRefLookupId: number | undefined };
 
 export type TSPLBWeightCreate = TSPListBaseAA<IGCLICFWeight>; //Type of Creating an item

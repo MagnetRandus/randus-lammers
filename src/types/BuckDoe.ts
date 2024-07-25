@@ -1,1 +1,1 @@
-export type BuckDoe = "Buck" | "Doe";
+export type IBuckDoe = "Buck" | "Doe";

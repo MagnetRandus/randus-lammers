@@ -22,12 +22,17 @@ import {
   SetStateAction,
   useState,
 } from "react";
-import { BuckDoe } from "Types/BuckDoe";
+import { IBuckDoe } from "Types/BuckDoe";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
 import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 import IdTagNr from "Interfaces/IdTagNr";
 import { HorizStack } from "Ux/StackHorizontal";
 import ThemeColor from "Ux/ColorScheme";
+import {
+  BBIdentFromItemId,
+  BBIdentFromTagNr,
+  validTagsFor,
+} from "Tools/BBIdent";
 
 const styledisablespinner: Partial<ITextFieldStyles> = {
   fieldGroup: {
@@ -62,43 +67,28 @@ const styleRadioButtons: Partial<
 interface IPropsBBDetail {
   formData: TSPListBaseCreate;
   setFormData: Dispatch<SetStateAction<Partial<TSPListBaseCreate> | undefined>>;
-  validTagNrs: Array<IdTagNr>;
+  BBIdents: Array<IdTagNr>;
   SetPageIsValid: Dispatch<SetStateAction<boolean>>;
+  setStatusMessage: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 const ItemForm: FC<IPropsBBDetail> = ({
   formData,
   setFormData,
-  validTagNrs,
+  BBIdents,
   SetPageIsValid,
+  setStatusMessage,
 }) => {
-  const damtagNr = formData.damLookupId
-    ? validTagNrs.filter(
-        (j) => j.ItemId === formData.damLookupId?.toString()
-      )[0].TagNr
-    : undefined;
-  const siretagNr = formData.sireLookupId
-    ? validTagNrs.filter(
-        (j) => j.ItemId === formData.sireLookupId?.toString()
-      )[0].TagNr
-    : undefined;
+  const { damLookupId, dateOfBirth, bbSks, sireLookupId, tagnr } = formData;
 
-  const [tagnr, setTagnr] = useState<string | undefined>(formData.tagnr);
-  const [tagnrErrMsg, setTagNrErrMsg] = useState<string | undefined>();
-
-  const [gender, setGender] = useState<BuckDoe | undefined>(formData.gender);
-  const [dob, setDob] = useState<Date>(formData.dateOfBirth);
-  const [dobT, setDobT] = useState<Date>(formData.dateOfBirth);
-
-  const [sire, setSire] = useState<string | undefined>(siretagNr);
-  const [sireErrMsg, setSireErrMsg] = useState<string>("");
-  const [dam, setDam] = useState<string | undefined>(damtagNr);
-  const [damErrMsg, setDamErrMsg] = useState<string>("");
+  const [sttTagnrErrMsg, SetTagNrErrMsg] = useState<string | undefined>();
+  const [sttSireErrMsg, SetSireErrMsg] = useState<string>("");
+  const [sttDamErrMsg, SetDamErrMsg] = useState<string>("");
 
   const Validate = () => {
-    const a = tagnrErrMsg === undefined || tagnrErrMsg === "";
-    const b = sireErrMsg === undefined || sireErrMsg === "";
-    const c = damErrMsg === undefined || damErrMsg === "";
+    const a = sttTagnrErrMsg === undefined || sttTagnrErrMsg === "";
+    const b = sttSireErrMsg === undefined || sttSireErrMsg === "";
+    const c = sttDamErrMsg === undefined || sttDamErrMsg === "";
     SetPageIsValid(a && b && c);
   };
 
@@ -107,55 +97,43 @@ const ItemForm: FC<IPropsBBDetail> = ({
   ) => {
     const value = ev.target.value;
     if (value) {
-      if (validTagNrs.findIndex((j) => j.TagNr === value) === -1) {
-        setTagnr(value);
+      const bbident = BBIdentFromTagNr(BBIdents, value);
+
+      if (bbident === undefined) {
         setFormData((pV) => {
           return { ...pV, tagnr: value };
         });
-        setTagNrErrMsg(``);
+        SetTagNrErrMsg(``);
       } else {
-        setTagNrErrMsg(`Tag Nr [${value} is already allocated]`);
+        SetTagNrErrMsg(`Tag Nr [${value} is already allocated]`);
       }
-    } else {
-      setTagNrErrMsg(`Provide a Tag Nr`);
-    }
 
-    Validate();
+      Validate();
+    }
   };
 
   const handleBuckDoeChange = (
     event: FormEvent<HTMLInputElement>,
     option: IChoiceGroupOption
   ) => {
-    setGender(option.key as BuckDoe);
     setFormData((pV) => {
-      return { ...pV, gender: option.key as BuckDoe };
+      return { ...pV, bbSks: option.key as IBuckDoe };
     });
   };
 
   const handledobChange = (date: Date) => {
-    setDob(date);
-    setDobT(date);
+    // SetDob(date);
+    // SetDobT(date);
     setFormData((pV) => {
       return { ...pV, dateOfBirth: date };
     });
   };
 
   const handleTimeChange = (ev: FormEvent<IComboBox>, value: Date) => {
-    setDobT(value);
+    // SetDobT(value);
     setFormData((pV) => {
       return { ...pV, dateOfBirth: value };
     });
-  };
-
-  const validTagsFor = (buckDoe: BuckDoe): string => {
-    return validTagNrs
-      .filter((j) => j.Gender === buckDoe)
-      .sort((a, b) => {
-        return parseInt(a.TagNr, 10) - parseInt(b.TagNr, 10);
-      })
-      .map((j) => j.TagNr)
-      .join(",");
   };
 
   const handleDamChange = (
@@ -163,41 +141,33 @@ const ItemForm: FC<IPropsBBDetail> = ({
     value: string | undefined
   ) => {
     if (value) {
-      const bbRefIdx = validTagNrs.findIndex((j) => {
-        return j.TagNr === value;
-      });
+      const bbident = BBIdentFromTagNr(BBIdents, value);
 
-      if (bbRefIdx !== -1) {
-        if (validTagNrs[bbRefIdx].Gender === "Doe") {
-          setDam(validTagNrs[bbRefIdx].TagNr);
-          setFormData((pV) => {
-            return {
-              ...pV,
-              damLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
-            };
-          });
-          setDamErrMsg("");
-        } else {
-          setDamErrMsg(`Can only be a doe [${validTagsFor("Doe")}]`);
-        }
+      if (bbident && bbident.Sks === "Doe") {
+        setFormData((pV) => {
+          return {
+            ...pV,
+            damLookupId: bbident.ItemId,
+          };
+        });
+        SetDamErrMsg("");
+        setStatusMessage("");
       } else {
-        setDam(undefined);
-        setDamErrMsg(
-          `Valid: ${validTagNrs
-            .filter((j) => j.Gender === "Doe")
-            .map((j) => j.TagNr)
-            .join(",")}`
+        setStatusMessage(
+          `Valid TagNrs (Doe): [${validTagsFor(BBIdents, "Doe")
+            ?.map((j) => j.TagNr)
+            .join(",")}]`
         );
+        SetDamErrMsg(`Not Valid`);
       }
     } else {
-      setDam(undefined);
       setFormData((pV) => {
         return {
           ...pV,
-          damLookupId: null,
+          damLookupId: undefined,
         };
       });
-      setDamErrMsg("");
+      SetDamErrMsg("");
     }
   };
 
@@ -206,36 +176,33 @@ const ItemForm: FC<IPropsBBDetail> = ({
     value: string
   ) => {
     if (value) {
-      const bbRefIdx = validTagNrs.findIndex((j) => {
-        return j.TagNr === value;
-      });
+      const bbident = BBIdentFromTagNr(BBIdents, value);
 
-      if (bbRefIdx !== -1) {
-        if (validTagNrs[bbRefIdx].Gender === "Buck") {
-          setSire(validTagNrs[bbRefIdx].TagNr);
-          setFormData((pV) => {
-            return {
-              ...pV,
-              sireLookupId: parseInt(validTagNrs[bbRefIdx].ItemId, 10),
-            };
-          });
-          setSireErrMsg("");
-        } else {
-          setSireErrMsg(`Can only be a buck [${validTagsFor("Buck")}]`);
-        }
+      if (bbident && bbident.Sks === "Buck") {
+        setFormData((pV) => {
+          return {
+            ...pV,
+            sireLookupId: bbident.ItemId,
+          };
+        });
+        SetSireErrMsg("");
+        setStatusMessage("");
       } else {
-        setSire(undefined);
-        setSireErrMsg(`Valid: ${validTagNrs.map((j) => j.TagNr).join(",")}`);
+        setStatusMessage(
+          `Valid TagNrs (Buck): [${validTagsFor(BBIdents, "Buck")
+            ?.map((j) => j.TagNr)
+            .join(",")}]`
+        );
+        SetSireErrMsg(`Not Valid`);
       }
     } else {
-      setSire(undefined);
       setFormData((pV) => {
         return {
           ...pV,
-          sireLookupId: null,
+          damLookupId: undefined,
         };
       });
-      setSireErrMsg("");
+      SetDamErrMsg("");
     }
   };
 
@@ -253,19 +220,27 @@ const ItemForm: FC<IPropsBBDetail> = ({
         <TextField
           label="Tag Nr"
           name="tagnr"
-          onChange={(ev, v) => setTagnr(v)}
           type="string"
-          value={tagnr}
-          errorMessage={tagnrErrMsg}
+          value={(() => {
+            return tagnr === "0" ? undefined : tagnr;
+          })()}
+          errorMessage={sttTagnrErrMsg}
           styles={styledisablespinner}
-          onFocus={() => setTagnr("")}
           onBlur={(ev) => handleTagNr(ev)}
+          onChange={(ev) => {
+            setFormData((pV) => {
+              return {
+                ...pV,
+                tagnr: (ev.target as HTMLInputElement).value,
+              };
+            });
+          }}
           autoFocus={formData.tagnr === "0"}
-          disabled={formData.tagnr !== "0"}
+          // disabled={formData.tagnr !== "0"}
         />
         <ChoiceGroup
-          label="Gender"
-          selectedKey={gender}
+          label="bbSks"
+          selectedKey={bbSks}
           onChange={handleBuckDoeChange}
           options={[
             { key: "Buck", text: "Buck" },
@@ -277,7 +252,7 @@ const ItemForm: FC<IPropsBBDetail> = ({
         <DatePicker
           label="Date of Birth"
           style={{ width: "190px" }}
-          value={dob}
+          value={dateOfBirth}
           onSelectDate={handledobChange}
           isRequired
           firstDayOfWeek={DayOfWeek.Sunday}
@@ -286,9 +261,9 @@ const ItemForm: FC<IPropsBBDetail> = ({
         />
         <TimePicker
           label="Time of Birth"
-          value={dobT}
+          value={dateOfBirth}
           onChange={handleTimeChange}
-          disabled={!dob}
+          disabled={!dateOfBirth}
           onBlur={() => Validate()}
         />
         <TextField
@@ -296,8 +271,8 @@ const ItemForm: FC<IPropsBBDetail> = ({
           name="sire"
           onChange={handleSireChange}
           type="number"
-          value={sire?.toString()}
-          errorMessage={sireErrMsg}
+          value={BBIdentFromItemId(BBIdents, sireLookupId)?.TagNr}
+          errorMessage={sttSireErrMsg}
           styles={styledisablespinner}
           onBlur={() => Validate()}
         />
@@ -306,12 +281,11 @@ const ItemForm: FC<IPropsBBDetail> = ({
           name="dam"
           onChange={handleDamChange}
           type="number"
-          value={dam?.toString()}
-          errorMessage={damErrMsg}
+          value={BBIdentFromItemId(BBIdents, damLookupId)?.TagNr}
+          errorMessage={sttDamErrMsg}
           styles={styledisablespinner}
           onBlur={() => Validate()}
           onKeyUp={(ev) => {
-            console.log(ev.key);
             if (ev.key === "Backspace") {
               (ev.target as HTMLInputElement).value = "undefined";
             }

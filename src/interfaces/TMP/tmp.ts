@@ -18,7 +18,7 @@ interface Fields {
   id: string;
   tagnr: string;
   dateOfBirth: string;
-  gender: string;
+  bbSks: string;
 }
 
 interface ContentType {

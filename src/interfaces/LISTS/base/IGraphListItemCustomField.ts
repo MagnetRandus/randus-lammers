@@ -1,13 +1,14 @@
 import IGraphListItem from "Interfaces/SP/graph-listitem";
 import { FieldsCustom } from "Interfaces/SP/graph-listitem-field";
-import { BuckDoe } from "Types/BuckDoe";
+import { IBuckDoe } from "Types/BuckDoe";
 
 interface IGraphListItemCustomFieldRead {
   tagnr: string;
   dateOfBirth: Date;
   sire: number;
   dam: number;
-  gender: BuckDoe;
+  bbSks: IBuckDoe;
+  bbWeight: number;
 }
 
 /**
@@ -23,6 +24,6 @@ export type TSPListBaseReadItem = FieldsCustom<IGraphListItemCustomFieldRead>;
  */
 
 type TSPListBaseA<T> = Omit<T, "sire" | "dam">;
-type TSPListBaseAA<T> = TSPListBaseA<T> & { sireLookupId: number | null; damLookupId: number | null };
+type TSPListBaseAA<T> = TSPListBaseA<T> & { sireLookupId: number | undefined; damLookupId: number | undefined };
 
 export type TSPListBaseCreate = TSPListBaseAA<IGraphListItemCustomFieldRead>; //Type of Creating an item

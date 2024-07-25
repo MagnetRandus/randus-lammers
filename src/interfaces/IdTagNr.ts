@@ -1,9 +1,10 @@
-import { BuckDoe } from "Types/BuckDoe";
+import { IBuckDoe } from "Types/BuckDoe";
 
-interface IdTagNr {
+interface IBBIdent {
   TagNr: string;
-  ItemId: string;
-  Gender: BuckDoe;
+  ItemId: number;
+  Sks: IBuckDoe;
+  Weight: number;
 }
 
-export default IdTagNr;
+export default IBBIdent;

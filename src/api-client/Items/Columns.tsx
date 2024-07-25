@@ -59,9 +59,9 @@ function CreateItemColumns(
       },
     }),
     createTableColumn<ItemType>({
-      columnId: "gender",
+      columnId: "bbSks",
       compare: (a, b) => {
-        return a.gender.localeCompare(b.gender);
+        return a.bbSks.localeCompare(b.bbSks);
       },
       renderHeaderCell() {
         return (
@@ -71,7 +71,47 @@ function CreateItemColumns(
         );
       },
       renderCell(item) {
-        return <TableCellLayout>{item.gender}</TableCellLayout>;
+        return <TableCellLayout>{item.bbSks}</TableCellLayout>;
+      },
+    }),
+    createTableColumn<ItemType>({
+      columnId: "bbWeight",
+      compare: (a, b) => {
+        return a.bbWeight - b.bbWeight;
+      },
+      renderHeaderCell() {
+        return (
+          <>
+            <b>Last known Weight</b>
+          </>
+        );
+      },
+      renderCell(item) {
+        return <TableCellLayout>{item.bbWeight}</TableCellLayout>;
+      },
+    }),
+    createTableColumn<ItemType>({
+      columnId: "sire",
+      compare: (a, b) => {
+        if (a.sire === undefined) return 1;
+        if (b.sire === undefined) return -1;
+        return a.sire - b.sire;
+      },
+      renderHeaderCell() {
+        return (
+          <>
+            <b>Sire</b>
+          </>
+        );
+      },
+      renderCell(item) {
+        return (
+          <TableCellLayout>
+            {item.sire ? (
+              <>{dataFlat.filter((j) => j.id === String(item.sire))[0].tagnr}</>
+            ) : undefined}
+          </TableCellLayout>
+        );
       },
     }),
     createTableColumn<ItemType>({
@@ -96,30 +136,6 @@ function CreateItemColumns(
           <TableCellLayout>
             {item.dam ? (
               <>{dataFlat.filter((j) => j.id === String(item.dam))[0].tagnr}</>
-            ) : undefined}
-          </TableCellLayout>
-        );
-      },
-    }),
-    createTableColumn<ItemType>({
-      columnId: "sire",
-      compare: (a, b) => {
-        if (a.sire === undefined) return 1;
-        if (b.sire === undefined) return -1;
-        return a.sire - b.sire;
-      },
-      renderHeaderCell() {
-        return (
-          <>
-            <b>Sire</b>
-          </>
-        );
-      },
-      renderCell(item) {
-        return (
-          <TableCellLayout>
-            {item.sire ? (
-              <>{dataFlat.filter((j) => j.id === String(item.sire))[0].tagnr}</>
             ) : undefined}
           </TableCellLayout>
         );
