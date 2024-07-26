@@ -9,7 +9,8 @@ const eapi = {
   setTitle: (title: string) => ipcRenderer.send("set-title", title),
   cloudCreateItem: <RT, PT>(listname: string, payload: Partial<IGraphListItem<PT>>): Promise<RCloudCreateReturnItem<RT>> => ipcRenderer.invoke("cloudCreateItem", listname, payload),
   cloudUpdateItem: <RT, PT>(listname: string, itemId: number, payload: Partial<IGraphListItem<PT>>): Promise<RT> => ipcRenderer.invoke("cloudUpdateItem", listname, itemId, payload),
-  cloudGetItems: <RT>(listname: string, extString: string): Promise<GraphResponse<RT>> => ipcRenderer.invoke("cloudGetItems", listname, extString),
+  cloudGetAllItems: <RT>(listname: string, extString: string): Promise<GraphResponse<RT>> => ipcRenderer.invoke("cloudGetAllItems", listname, extString),
+  cloudGetItems: <RT>(listname: string, filter: string, extString: string): Promise<GraphResponse<RT>> => ipcRenderer.invoke("cloudGetItems", listname, filter, extString),
   cloudDeleteItems: <PT>(listname: string, payload: PT): Promise<undefined> => ipcRenderer.invoke("cloudDeleteItems", listname, payload),
   localLogging: (ErrLvl: TErrorLevel, Label: string, Message: string): any => ipcRenderer.send("localLogging", ErrLvl, Label, Message),
 };

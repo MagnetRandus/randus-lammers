@@ -17,7 +17,7 @@ export function HorizStack(opts: IHorizStackOpts): [IStackStyles, IStackTokens] 
     root: [
       {
         backgroundColor: opts.bgColor,
-        border: `1px solid ${opts.bordercolor}`,
+        // border: `1px solid ${opts.bordercolor}`,
         minWidth: opts.minWidth ?? 125,
         paddingTop: opts.paddingTop ?? 12,
         paddingLeft: opts.paddingLeft ?? 12,

@@ -9,6 +9,9 @@ export function BBIdentToItemId(selectedRows: Set<TableRowId>, BBIdent: IBBIdent
   }
   return undefined;
 }
+export function BBIdentFromSelectedRows(BBIdent: IBBIdent[], selectedRows: Set<TableRowId>): IBBIdent[] {
+  return BBIdent.filter((j) => Array.from(selectedRows.values()).includes(j.TagNr));
+}
 
 export function BBIdentFromTagNr(BBIdents: IBBIdent[], TagNr: string): IBBIdent | undefined {
   return BBIdents[

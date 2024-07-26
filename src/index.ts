@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, session } from "electron";
 import { Say } from "Local/logger/Logger";
 import cloudCreateItem from "Server/ipc/cloudCreateItem";
 import cloudDeleteItems from "Server/ipc/cloudDeleteItems";
+import cloudGetAllItems from "Server/ipc/cloudGetAllItems";
 import cloudGetItems from "Server/ipc/cloudGetItems";
 import cloudUpdateItem from "Server/ipc/cloudUpdateItem";
 import SPInitSite from "Server/spInit";
@@ -73,6 +74,7 @@ const createWindow = (): void => {
 
     ipcMain.handle("dialog:openFile", handleFileOpen);
     ipcMain.handle("cloudCreateItem", cloudCreateItem);
+    ipcMain.handle("cloudGetAllItems", cloudGetAllItems);
     ipcMain.handle("cloudGetItems", cloudGetItems);
     ipcMain.handle("cloudDeleteItems", cloudDeleteItems);
     ipcMain.handle("cloudUpdateItem", cloudUpdateItem);

@@ -21,7 +21,7 @@ interface IPropsTraceWeight {
   SetPageIsValid: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const TraceWeight: React.FC<IPropsTraceWeight> = ({
+const WeightItem: React.FC<IPropsTraceWeight> = ({
   setFormData,
   formData,
   SetPageIsValid,
@@ -88,24 +88,21 @@ const TraceWeight: React.FC<IPropsTraceWeight> = ({
           title="Weight in kilogram"
           onChange={(ev, v) => handleWeightChange(ev, v)}
           type="number"
-          value={String(bbWeight)}
+          value={bbWeight === 0 ? "" : String(bbWeight)}
           errorMessage={WeightErr}
           styles={Styledisablespinner}
-          onBlur={() => {
-            [];
-          }}
           onKeyUp={(ev) => {
             if (ev.key === "Backspace") {
               setFormData((pV) => {
                 return {
                   ...pV,
-                  bbWeight: undefined,
+                  bbWeight: 0,
                 };
               });
             }
           }}
           autoFocus
-          description="kg"
+          description="#.## kg"
         />
         <DatePicker
           label="Measurement date"
@@ -126,4 +123,4 @@ const TraceWeight: React.FC<IPropsTraceWeight> = ({
   );
 };
 
-export default TraceWeight;
+export default WeightItem;

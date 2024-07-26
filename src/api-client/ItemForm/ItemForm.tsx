@@ -79,9 +79,11 @@ const ItemForm: FC<IPropsBBDetail> = ({
   SetPageIsValid,
   setStatusMessage,
 }) => {
-  const { damLookupId, dateOfBirth, bbSks, sireLookupId, tagnr } = formData;
+  const { damLookupId, dateOfBirth, bbSks, sireLookupId, tagnr, bbWeight } =
+    formData;
 
   const [sttTagnrErrMsg, SetTagNrErrMsg] = useState<string | undefined>();
+  const [sttWeightErrMsg, SetWeightErrMsg] = useState<string | undefined>();
   const [sttSireErrMsg, SetSireErrMsg] = useState<string>("");
   const [sttDamErrMsg, SetDamErrMsg] = useState<string>("");
 
@@ -89,7 +91,8 @@ const ItemForm: FC<IPropsBBDetail> = ({
     const a = sttTagnrErrMsg === undefined || sttTagnrErrMsg === "";
     const b = sttSireErrMsg === undefined || sttSireErrMsg === "";
     const c = sttDamErrMsg === undefined || sttDamErrMsg === "";
-    SetPageIsValid(a && b && c);
+    const d = sttWeightErrMsg === undefined || sttWeightErrMsg === "";
+    SetPageIsValid(a && b && c && d);
   };
 
   const handleTagNr = (
@@ -110,6 +113,22 @@ const ItemForm: FC<IPropsBBDetail> = ({
 
       Validate();
     }
+  };
+
+  const validateWeight = (
+    ev: FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element>
+  ) => {
+    const value = ev.target.value;
+
+    if (!isNaN(parseFloat(value)) || parseFloat(value) >= 0) {
+      setFormData((pV) => {
+        return { ...pV, bbWeight: parseFloat(value) };
+      });
+      SetWeightErrMsg(``);
+    } else {
+      SetWeightErrMsg(`Not valid`);
+    }
+    Validate();
   };
 
   const handleBuckDoeChange = (
@@ -266,6 +285,25 @@ const ItemForm: FC<IPropsBBDetail> = ({
           disabled={!dateOfBirth}
           onBlur={() => Validate()}
         />
+        {formData.tagnr === "0" && (
+          <TextField
+            label="Weight"
+            name="bbWeight"
+            type="number"
+            value={String(bbWeight)}
+            errorMessage={sttWeightErrMsg}
+            styles={styledisablespinner}
+            onBlur={(ev) => validateWeight(ev)}
+            onChange={(ev: FormEvent<HTMLInputElement>) => {
+              setFormData((pV) => {
+                return {
+                  ...pV,
+                  bbWeight: parseFloat((ev.target as HTMLInputElement).value),
+                };
+              });
+            }}
+          />
+        )}
         <TextField
           label="Sire"
           name="sire"

@@ -14,7 +14,7 @@ import {
   TSPListBaseCreate,
   TSPListBaseRead,
 } from "Interfaces/LISTS/base/IGraphListItemCustomField";
-import Items from "Client/Items/Items";
+import WeightItems from "Client/Weight/Items";
 import IBBIdent from "Interfaces/IdTagNr";
 import ObjectMake from "Tools/ObjectMake";
 import { TableRowId } from "@fluentui/react-table";
@@ -53,10 +53,16 @@ import {
   updateIcon,
 } from "Ux/Icons";
 import ItemForm from "Client/ItemForm/ItemForm";
-import TraceWeight from "Client/Trace/Weight";
+import WeightItem from "Client/Weight/Item";
 import { HorizStack } from "Ux/StackHorizontal";
 import ThemeColor from "Ux/ColorScheme";
-import { BBIdentToItemId } from "Tools/BBIdent";
+import {
+  BBIdentFromSelectedRows,
+  BBIdentFromTagNr,
+  BBIdentToItemId,
+} from "Tools/BBIdent";
+import Items from "Client/Items/Items";
+import { StackGenericStyles, stackGenericToken } from "Ux/StackGeneric";
 
 initializeIcons();
 registerIcons({
@@ -112,16 +118,21 @@ const BBok: React.FC<IPropsBBok> = ({
 
   const [PageIsValid, SetPageIsValid] = useState<boolean>(false);
 
+  const [ItemsWeight, SetItemsWeight] = useState<
+    TSPLBWeightRead[] | undefined
+  >();
+
   useEffect(() => {
     if (ResetCount >= 1)
       window.eapi
-        .cloudGetItems<TSPListBaseRead>(
+        .cloudGetAllItems<TSPListBaseRead>(
           BaseList,
-          `fields($select=id,tagnr,dateOfBirth,dam,sire,bbSks)`
+          `fields($select=id,tagnr,dateOfBirth,dam,sire,bbSks,bbWeight)`
         )
         .then((res) => {
           if (res) {
             setItemsData(res.value);
+
             SetBBIdents(
               res.value.map((j) => {
                 return ObjectMake<IBBIdent>({
@@ -132,6 +143,7 @@ const BBok: React.FC<IPropsBBok> = ({
                 });
               })
             );
+
             setStatusMessageTitle(`Welcome to ${AppName}`);
           }
         });
@@ -152,6 +164,10 @@ const BBok: React.FC<IPropsBBok> = ({
     if (ItemsData) {
       if (SelectedRows.size === 1) {
         SetMode("Single");
+        if (BBIdents) {
+          const bbident = BBIdentFromSelectedRows(BBIdents, SelectedRows);
+          SetTagNr(bbident[0].TagNr);
+        }
       } else if (SelectedRows.size > 1) {
         SetMode("Multiple");
       } else {
@@ -160,50 +176,51 @@ const BBok: React.FC<IPropsBBok> = ({
     } else {
       SetMode("None");
     }
-  }, [SelectedRows, ItemsData]);
+  }, [SelectedRows, ItemsData, BBIdents]);
   useEffect(() => {
-    switch (Mode) {
-      case "Single":
-        SetModeEditing("None");
-        if (BBIdents && BBIdents.length !== 0)
-          setStatusMessage(
-            `Selected: ${BBIdentToItemId(SelectedRows, BBIdents)}`
-          );
-        //Single means, an item is selected, but no action chosen; technically this will do nothing, but it is a separate state!
-        break;
-      case "Multiple":
-        SetTagNr("0");
-        break;
-      case "Editing":
-        if (ModeEditing === "ItemEdit") {
-          SetTagNr(Array.from(SelectedRows.values())[0].toLocaleString());
-        }
-        if (ModeEditing === "ItemAdd") {
-          setFormData(formDefaults);
-        }
-        if (ModeEditing === "WeightAdd" && BBIdents) {
-          setFormWeightData(
-            FormDefaultsWeightInit(BBIdentToItemId(SelectedRows, BBIdents))
-          );
-        }
-
-        if (BBIdents && BBIdents.length !== 0)
-          setStatusMessage(
-            `${ModeEditing}:${BBIdents[0].Sks}-${BBIdents[0].TagNr}`
-          );
-
-        break;
-      case "None":
-        SetTagNr("0");
-        SetSelectedRows(rowDefaultSelection);
-        SetModeEditing("None");
-        setFormData(undefined);
-        setFormWeightData(undefined);
-        setStatusMessage(AppName);
-        setStatusMessageTitle(`Welcome to ${AppName}`);
-        SetResetCount((pV) => pV + 1);
-        break;
+    //Mode changed!!!
+    if (Mode === "None") {
+      SetTagNr("0");
+      SetSelectedRows(rowDefaultSelection);
+      SetModeEditing("None");
+      setFormData(undefined);
+      setFormWeightData(undefined);
+      SetItemsWeight(undefined);
+      setStatusMessage(AppName);
+      setStatusMessageTitle(`Welcome to ${AppName}`);
+      SetResetCount((pV) => pV + 1);
+    } else if (BBIdents && BBIdents.length !== 0) {
+      setStatusMessage(
+        BBIdentFromSelectedRows(BBIdents, SelectedRows)
+          .map((j) => {
+            return `${j.TagNr}-${j.Sks}`;
+          })
+          .join("; ")
+      );
+      switch (Mode) {
+        case "Single":
+          SetModeEditing("None"); //Single means, an item is selected, but no action chosen; technically this will do nothing, but it is a separate state!
+          break;
+        case "Multiple":
+          SetTagNr("0");
+          SetModeEditing("None");
+          break;
+        case "Editing":
+          if (ModeEditing === "ItemEdit") {
+            SetTagNr(Array.from(SelectedRows.values())[0].toLocaleString());
+          }
+          if (ModeEditing === "ItemAdd") {
+            setFormData(formDefaults);
+          }
+          if (ModeEditing === "WeightAdd" && BBIdents) {
+            setFormWeightData(
+              FormDefaultsWeightInit(BBIdentToItemId(SelectedRows, BBIdents))
+            );
+          }
+          break;
+      }
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Mode]);
   useEffect(() => {
@@ -229,9 +246,39 @@ const BBok: React.FC<IPropsBBok> = ({
     }
   }, [TagNr, ItemsData, SelectedRows]);
 
+  useEffect(() => {
+    if (ModeEditing === "WeightAdd") {
+      setStatusMessage("LARGE::Weight");
+      (async () => {
+        try {
+          if (BBIdents && !ItemsWeight) {
+            const bbident = BBIdentFromTagNr(BBIdents, TagNr);
+            if (bbident) {
+              const wInf = await window.eapi.cloudGetItems<TSPLBWeightRead>(
+                TraceList,
+                `fields/bbRefLookupId eq ${bbident.ItemId}`,
+                `fields($select=*)`
+              );
+              SetItemsWeight(wInf.value);
+            }
+          }
+        } catch (err) {
+          if ("message" in err) {
+            setStatusMessage(err.message);
+          }
+        }
+      })();
+    }
+  }, [ItemsWeight, SetItemsWeight, TraceList, BBIdents, TagNr, ModeEditing]);
+
   const SetEditingModeTo = (editingMode: EditingMode): void => {
-    SetMode("Editing");
-    SetModeEditing(editingMode);
+    if (editingMode !== "None") {
+      SetMode("Editing");
+      SetModeEditing(editingMode);
+    } else {
+      SetMode("None");
+      SetModeEditing("None");
+    }
   };
 
   const [CPStackHorizStyles, CPStackHorizToken] = HorizStack({
@@ -304,6 +351,7 @@ const BBok: React.FC<IPropsBBok> = ({
                       }
                     }
                   }
+
                   if (ModeEditing === "ItemEdit") {
                     if (BBIdents && BBIdents.length !== 0) {
                       try {
@@ -324,6 +372,7 @@ const BBok: React.FC<IPropsBBok> = ({
                       }
                     }
                   }
+
                   if (ModeEditing === "WeightAdd" && formWeightData) {
                     /**Add Weight to base profile */
 
@@ -339,36 +388,36 @@ const BBok: React.FC<IPropsBBok> = ({
                               bbWeight: formWeightData.bbWeight,
                             },
                           });
-                          SetMode("None");
+                          SetEditingModeTo("None");
                         }
-                      } catch (error) {
-                        if ("message" in error) {
-                          setStatusMessage(error.message);
+                      } catch (err) {
+                        if ("message" in err) {
+                          setStatusMessage(err.message);
                         }
                       }
+
+                      try {
+                        await window.eapi.cloudCreateItem<
+                          TSPLBWeightRead,
+                          TSPLBWeightCreate
+                        >(TraceList, {
+                          contentType: {
+                            id: TraceWeightContentTypeId,
+                          },
+                          fields: formWeightData,
+                        });
+                      } catch (err) {
+                        if ("message" in err) {
+                          setStatusMessage(err.message);
+                        }
+                      }
+                    } else {
+                      setStatusMessage(
+                        `Could not add trace, bbidents is empty (or something else)`
+                      );
                     }
 
                     /** Add Weight to Trace */
-
-                    const traceItm = await window.eapi.cloudCreateItem<
-                      TSPLBWeightRead,
-                      TSPLBWeightCreate
-                    >(TraceList, {
-                      contentType: {
-                        id: TraceWeightContentTypeId,
-                      },
-                      fields: formWeightData,
-                    });
-
-                    SetMode("Single");
-
-                    window.eapi.localLogging(
-                      "Info",
-                      "weight traceitm create",
-                      JSON.stringify(traceItm)
-                    );
-
-                    SetMode("Single");
                   }
                 })();
               }}
@@ -381,6 +430,7 @@ const BBok: React.FC<IPropsBBok> = ({
               VisibleWhen={["Editing"]}
               Click={() => {
                 SetMode("None");
+                console.dir(ItemsWeight);
               }}
             />
             <Action
@@ -417,7 +467,13 @@ const BBok: React.FC<IPropsBBok> = ({
                 title={statusMessageTitle}
                 style={{ maxWidth: 500, paddingRight: 12 }}
               >
-                {statusMessage}
+                {statusMessage.indexOf("::") === -1 ? (
+                  statusMessage
+                ) : (
+                  <div style={{ fontSize: "large" }}>
+                    {statusMessage.split("::")[1]}
+                  </div>
+                )}
               </div>
             )}
           </Stack>
@@ -440,16 +496,23 @@ const BBok: React.FC<IPropsBBok> = ({
             />
           )}
           {ModeEditing === "WeightAdd" && formWeightData && (
-            <TraceWeight
-              formData={formWeightData}
-              setFormData={setFormWeightData}
-              SetPageIsValid={SetPageIsValid}
-            />
+            <>
+              <WeightItem
+                formData={formWeightData}
+                setFormData={setFormWeightData}
+                SetPageIsValid={SetPageIsValid}
+              />
+              {ItemsWeight && (
+                <Stack styles={StackGenericStyles} tokens={stackGenericToken}>
+                  <WeightItems data={ItemsWeight} />
+                </Stack>
+              )}
+            </>
           )}
         </Stack>
       </form>
       <Stack>
-        {ItemsData && (
+        {ItemsData && ModeEditing !== "WeightAdd" && (
           <Items
             data={ItemsData}
             selectedRows={SelectedRows}

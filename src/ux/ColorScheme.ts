@@ -15,6 +15,8 @@
 interface IColorScheme {
   almondCreamLight: string;
   almondCream: string;
+  lavenderMist: string;
+  royalPlum: string;
   peachBeige: string;
   walnutBrown: string;
   desertTan: string;
@@ -28,6 +30,8 @@ interface IColorScheme {
 const ThemeColor: IColorScheme = {
   almondCreamLight: "#f7f8ec",
   almondCream: "#f2f4dc", // Background
+  lavenderMist: "#E2DCF5", //Also a background
+  royalPlum: "#6D2F75",
   peachBeige: "#f2ca99", // Secondary Background or Highlight
   walnutBrown: "#73553c", // Text, Borders, or Accent
   desertTan: "#bf9169", // Buttons or Interactive Elements

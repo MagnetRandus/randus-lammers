@@ -5,12 +5,12 @@ export const StackGenericStyles: IStackStyles = {
   root: [
     {
       minWidth: 125,
-      backgroundColor: ThemeColor.almondCream,
+      backgroundColor: ThemeColor.lavenderMist,
       paddingTop: 12,
       paddingLeft: 12,
       paddingBottom: 12,
       marginBottom: 12,
-      border: `1px solid ${ThemeColor.desertTan}`,
+      border: `1px solid ${ThemeColor.lavenderMist}`,
       gap: 7,
     },
   ],
