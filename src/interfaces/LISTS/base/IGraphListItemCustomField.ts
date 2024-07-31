@@ -2,11 +2,16 @@ import IGraphListItem from "Interfaces/SP/graph-listitem";
 import { FieldsCustom } from "Interfaces/SP/graph-listitem-field";
 import { IBuckDoe } from "Types/BuckDoe";
 
+interface multiLookup {
+  LookupId: number;
+  LookupValue: string;
+}
+
 interface IGraphListItemCustomFieldRead {
   tagnr: string;
   dateOfBirth: Date;
-  sire: number;
-  dam: number;
+  sire: Array<multiLookup> | undefined;
+  dam: number | undefined;
   bbSks: IBuckDoe;
   bbWeight: number;
 }
@@ -24,6 +29,6 @@ export type TSPListBaseReadItem = FieldsCustom<IGraphListItemCustomFieldRead>;
  */
 
 type TSPListBaseA<T> = Omit<T, "sire" | "dam">;
-type TSPListBaseAA<T> = TSPListBaseA<T> & { sireLookupId: number | undefined; damLookupId: number | undefined };
+type TSPListBaseAA<T> = TSPListBaseA<T> & { sireLookupId: Array<number> | undefined; damLookupId: number | undefined };
 
 export type TSPListBaseCreate = TSPListBaseAA<IGraphListItemCustomFieldRead>; //Type of Creating an item

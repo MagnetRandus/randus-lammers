@@ -20,6 +20,7 @@ import {
   FocusEvent,
   FormEvent,
   SetStateAction,
+  useEffect,
   useState,
 } from "react";
 import { IBuckDoe } from "Types/BuckDoe";
@@ -82,16 +83,67 @@ const ItemForm: FC<IPropsBBDetail> = ({
   const { damLookupId, dateOfBirth, bbSks, sireLookupId, tagnr, bbWeight } =
     formData;
 
+  const [sttSireTyping, SetSireTyping] = useState<string | undefined>(
+    sireLookupId
+      ?.map((j) => BBIdentFromItemId(BBIdents, j))
+      .map((j) => j?.TagNr)
+      .join(",")
+  );
+  const [sttValidateSireIds, SetValidateSireIds] = useState<boolean>(true);
+
   const [sttTagnrErrMsg, SetTagNrErrMsg] = useState<string | undefined>();
   const [sttWeightErrMsg, SetWeightErrMsg] = useState<string | undefined>();
   const [sttSireErrMsg, SetSireErrMsg] = useState<string>("");
   const [sttDamErrMsg, SetDamErrMsg] = useState<string>("");
 
-  const Validate = () => {
+  useEffect(() => {
+    if (sttValidateSireIds) SetSireErrMsg("");
+  }, [sttValidateSireIds, SetValidateSireIds]);
+
+  const validateSireIdents = (
+    v: string | undefined
+  ): Array<number> | undefined => {
+    let sirelookupids: Array<number> | undefined = undefined;
+
+    const sirelookupidsInvalid: Array<string> = [];
+
+    SetValidateSireIds(true);
+
+    if (v) {
+      sirelookupids = v
+        .split(",")
+        .map((JTagNr) => {
+          const J = BBIdentFromTagNr(BBIdents, JTagNr);
+          if (J) {
+            if (J.Sks !== "Buck")
+              sirelookupidsInvalid.push(`${JTagNr}-${J.Sks}`);
+          } else {
+            sirelookupidsInvalid.push(`${JTagNr}-Unknown`);
+          }
+
+          if (sirelookupidsInvalid.length !== 0) {
+            SetSireErrMsg(`Tag Error: ${sirelookupidsInvalid.join(",")}`);
+            SetValidateSireIds(false);
+          }
+
+          return J;
+        })
+        .filter((ident) => ident !== undefined)
+        .map((ident) => ident.ItemId);
+
+      if (sirelookupids.length === 0) sirelookupids = undefined;
+    }
+
+    return sirelookupids;
+  };
+
+  const Validate = (): void => {
     const a = sttTagnrErrMsg === undefined || sttTagnrErrMsg === "";
-    const b = sttSireErrMsg === undefined || sttSireErrMsg === "";
+    const b =
+      sttSireErrMsg === "" || (sttSireErrMsg === "" && sttValidateSireIds);
     const c = sttDamErrMsg === undefined || sttDamErrMsg === "";
     const d = sttWeightErrMsg === undefined || sttWeightErrMsg === "";
+
     SetPageIsValid(a && b && c && d);
   };
 
@@ -149,7 +201,6 @@ const ItemForm: FC<IPropsBBDetail> = ({
   };
 
   const handleTimeChange = (ev: FormEvent<IComboBox>, value: Date) => {
-    // SetDobT(value);
     setFormData((pV) => {
       return { ...pV, dateOfBirth: value };
     });
@@ -190,30 +241,56 @@ const ItemForm: FC<IPropsBBDetail> = ({
     }
   };
 
+  const onKeyUpSire = (ev: React.KeyboardEvent) => {
+    if (ev.key === "Backspace" && sttSireTyping?.length === 1) {
+      SetSireTyping(undefined);
+    }
+    // if (ev.key === "," && sttSireTyping) {
+    //   validateSireIdents(sttSireTyping);
+    // } else {
+    //   if (ev.key === " ") {
+    //     SetSireErrMsg("Space not allowed");
+    //   } else {
+    //     SetSireErrMsg("");
+    //   }
+    // }
+  };
+  const onBlurSire = () => {
+    const sireItemIds = validateSireIdents(sttSireTyping);
+
+    if (sireItemIds === undefined || sireItemIds.length !== 0)
+      setFormData((pV) => {
+        return {
+          ...pV,
+          sireLookupId: sireItemIds,
+        };
+      });
+  };
   const handleSireChange = (
     ev: FormEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: string
   ) => {
     if (value) {
-      const bbident = BBIdentFromTagNr(BBIdents, value);
-
-      if (bbident && bbident.Sks === "Buck") {
-        setFormData((pV) => {
-          return {
-            ...pV,
-            sireLookupId: bbident.ItemId,
-          };
-        });
-        SetSireErrMsg("");
-        setStatusMessage("");
-      } else {
-        setStatusMessage(
-          `Valid TagNrs (Buck): [${validTagsFor(BBIdents, "Buck")
-            ?.map((j) => j.TagNr)
-            .join(",")}]`
-        );
-        SetSireErrMsg(`Not Valid`);
-      }
+      console.log(value);
+      SetSireTyping(value.replace(" ", ","));
+      // const bbident = BBIdentFromTagNr(BBIdents, value);
+      // if (bbident && bbident.Sks === "Buck") {
+      //   setFormData((pV) => {
+      //     return {
+      //       ...pV,
+      //       sireLookupId: bbident.ItemId,
+      //     };
+      //   });
+      //   SetSireErrMsg("");
+      //   setStatusMessage("");
+      // } else {
+      //   setStatusMessage(
+      //     `Valid TagNrs (Buck): [${validTagsFor(BBIdents, "Buck")
+      //       ?.map((j) => j.TagNr)
+      //       .join(",")}]`
+      //   );
+      //   SetSireErrMsg(`Not Valid`);
+      // }
     } else {
       setFormData((pV) => {
         return {
@@ -308,11 +385,12 @@ const ItemForm: FC<IPropsBBDetail> = ({
           label="Sire"
           name="sire"
           onChange={handleSireChange}
-          type="number"
-          value={BBIdentFromItemId(BBIdents, sireLookupId)?.TagNr}
+          type="text"
+          value={sttSireTyping} //BBIdentFromItemId(BBIdents, sireLookupId)?.TagNr
           errorMessage={sttSireErrMsg}
           styles={styledisablespinner}
-          onBlur={() => Validate()}
+          onBlur={() => onBlurSire()}
+          onKeyUp={(ev) => onKeyUpSire(ev)}
         />
         <TextField
           label="Dam"

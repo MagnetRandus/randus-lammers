@@ -236,7 +236,10 @@ const BBok: React.FC<IPropsBBok> = ({
             bbWeight: FieldsToEdit.bbWeight,
             dateOfBirth: new Date(FieldsToEdit.dateOfBirth),
             damLookupId: FieldsToEdit.dam ? FieldsToEdit.dam : undefined,
-            sireLookupId: FieldsToEdit.sire ? FieldsToEdit.sire : undefined,
+            // sireLookupId: FieldsToEdit.sire ? FieldsToEdit.sire : undefined,
+            sireLookupId: FieldsToEdit.sire
+              ? FieldsToEdit.sire.map((j) => j.LookupId)
+              : undefined,
           });
         }
       });

@@ -21,7 +21,7 @@ export function BBIdentFromTagNr(BBIdents: IBBIdent[], TagNr: string): IBBIdent 
   ];
 }
 
-export function BBIdentFromItemId(BBIdents: IBBIdent[], ItemId: string | number | undefined | null): IBBIdent | undefined {
+export function BBIdentFromItemId(BBIdents: IBBIdent[], ItemId: string | number | undefined): IBBIdent | undefined {
   if (typeof ItemId === "number") {
     console.log(`ItemId is a number`);
     return BBIdents[

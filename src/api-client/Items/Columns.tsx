@@ -95,7 +95,7 @@ function CreateItemColumns(
       compare: (a, b) => {
         if (a.sire === undefined) return 1;
         if (b.sire === undefined) return -1;
-        return a.sire - b.sire;
+        return a.sire[0].LookupId - b.sire[0].LookupId;
       },
       renderHeaderCell() {
         return (
@@ -107,9 +107,9 @@ function CreateItemColumns(
       renderCell(item) {
         return (
           <TableCellLayout>
-            {item.sire ? (
-              <>{dataFlat.filter((j) => j.id === String(item.sire))[0].tagnr}</>
-            ) : undefined}
+            {item.sire &&
+              item.sire.length !== 0 &&
+              item.sire.flatMap((j) => j.LookupValue).join(",")}
           </TableCellLayout>
         );
       },
@@ -132,11 +132,16 @@ function CreateItemColumns(
         );
       },
       renderCell(item) {
+        let flatItems: Partial<TSPListBaseReadItem>[] | undefined = undefined;
+        if (item.dam) {
+          flatItems = dataFlat.filter((j) => j.tagnr === String(item.dam));
+          if (flatItems.length === 0) {
+            flatItems = undefined;
+          }
+        }
         return (
           <TableCellLayout>
-            {item.dam ? (
-              <>{dataFlat.filter((j) => j.id === String(item.dam))[0].tagnr}</>
-            ) : undefined}
+            {flatItems && flatItems.map((j) => j.tagnr).join(", ")}
           </TableCellLayout>
         );
       },

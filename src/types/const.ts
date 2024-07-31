@@ -6,7 +6,7 @@ export const formDefaults: TSPListBaseCreate = {
   tagnr: "0",
   dateOfBirth: new Date(),
   damLookupId: undefined,
-  sireLookupId: undefined,
+  sire: undefined,
   bbSks: "Buck",
   bbWeight: 0,
 };
