@@ -15,7 +15,7 @@ import {
   TSPListBaseRead,
 } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 import WeightItems from "Client/Weight/Items";
-import IBBIdent from "Interfaces/IdTagNr";
+import IBBIdent from "Interfaces/IBBIdent";
 import ObjectMake from "Tools/ObjectMake";
 import { TableRowId } from "@fluentui/react-table";
 import {
@@ -31,6 +31,7 @@ import {
   CancelIcon,
   ClearSelectionIcon,
   DeleteIcon,
+  FlagIcon,
   MedicalIcon,
   SaveAsIcon,
   SaveIcon,
@@ -47,6 +48,7 @@ import {
   cancelIcon,
   clearFilterIcon,
   deletelIcon,
+  maleIcon,
   medicalIcon,
   saveIcon,
   stepIcon,
@@ -63,6 +65,9 @@ import {
 } from "Tools/BBIdent";
 import Items from "Client/Items/Items";
 import { StackGenericStyles, stackGenericToken } from "Ux/StackGeneric";
+import BaseSiresCreate from "Interfaces/BaseSires";
+import { TSPLBSireRead } from "Interfaces/LISTS/sires/IGLICF-Sires";
+import SiresAdd from "Client/Sires/SireAdd";
 
 initializeIcons();
 registerIcons({
@@ -76,12 +81,14 @@ registerIcons({
     iconclear: <ClearSelectionIcon />,
     iconstep: <StepIcon />,
     iconmedical: <MedicalIcon />,
+    iconMale: <FlagIcon />,
   },
 });
 
 interface IPropsBBok {
   BaseList: string;
   TraceList: string;
+  SiresList: string;
   AppName: string;
   ResetCount: number;
   SetResetCount: Dispatch<SetStateAction<number>>;
@@ -92,6 +99,7 @@ const BBok: React.FC<IPropsBBok> = ({
   SetResetCount,
   BaseList,
   TraceList,
+  SiresList,
   AppName,
 }) => {
   const [Mode, SetMode] = useState<SelectMode>("None");
@@ -108,6 +116,11 @@ const BBok: React.FC<IPropsBBok> = ({
 
   const [TagNr, SetTagNr] = useState<string>("0");
   const [BBIdents, SetBBIdents] = useState<Array<IBBIdent> | undefined>();
+
+  const [Sires, SetSires] = useState<
+    Map<number, Array<IBBIdent>> | undefined
+  >();
+
   const [ItemsData, setItemsData] = useState<
     Array<TSPListBaseRead> | undefined
   >();
@@ -123,11 +136,14 @@ const BBok: React.FC<IPropsBBok> = ({
   >();
 
   useEffect(() => {
-    if (ResetCount >= 1)
+    if (ResetCount >= 1) {
+      /**
+       * BB
+       */
       window.eapi
         .cloudGetAllItems<TSPListBaseRead>(
           BaseList,
-          `fields($select=id,tagnr,dateOfBirth,dam,sire,bbSks,bbWeight)`
+          `fields($select=id,tagnr,dateOfBirth,dam,bbSks,bbWeight,bbStatus)`
         )
         .then((res) => {
           if (res) {
@@ -140,6 +156,7 @@ const BBok: React.FC<IPropsBBok> = ({
                   TagNr: j.fields.tagnr,
                   Sks: j.fields.bbSks,
                   Weight: j.fields.bbWeight,
+                  Status: j.fields.bbStatus,
                 });
               })
             );
@@ -147,6 +164,8 @@ const BBok: React.FC<IPropsBBok> = ({
             setStatusMessageTitle(`Welcome to ${AppName}`);
           }
         });
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ResetCount]);
   useEffect(() => {
@@ -224,6 +243,42 @@ const BBok: React.FC<IPropsBBok> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Mode]);
   useEffect(() => {
+    if (ItemsData) {
+      /**
+       * SIRES
+       */
+      window.eapi
+        .cloudGetAllItems<TSPLBSireRead>(
+          SiresList,
+          `fields($select=id,bbRef,sireRef)`
+        )
+        .then((res) => {
+          if (res) {
+            const sireP = new Map<number, Array<IBBIdent>>();
+
+            if (BBIdents)
+              BBIdents.forEach((bbIdent) => {
+                const sires = res.value.filter(
+                  (j) => parseInt(j.fields.bbRef, 10) === bbIdent.ItemId
+                );
+
+                if (sires.length !== 0) {
+                  const siresItemIds = sires.map((j) => j.fields.sireRef);
+                  const sireIdents = siresItemIds.flatMap((sireItemId) =>
+                    BBIdents.filter(
+                      (bbident) => bbident.ItemId === parseInt(sireItemId, 10)
+                    )
+                  );
+                  if (sireIdents.length > 0) {
+                    sireP.set(bbIdent.ItemId, sireIdents);
+                  }
+                }
+              });
+            SetSires(sireP);
+            setStatusMessageTitle(`Welcome to ${AppName}...`);
+          }
+        });
+    }
     if (TagNr !== "0" && ItemsData) {
       SelectedRows.forEach((v) => {
         const FieldsToEdit = ItemsData.filter((j) => j.fields.tagnr === v)[0]
@@ -236,10 +291,7 @@ const BBok: React.FC<IPropsBBok> = ({
             bbWeight: FieldsToEdit.bbWeight,
             dateOfBirth: new Date(FieldsToEdit.dateOfBirth),
             damLookupId: FieldsToEdit.dam ? FieldsToEdit.dam : undefined,
-            // sireLookupId: FieldsToEdit.sire ? FieldsToEdit.sire : undefined,
-            sireLookupId: FieldsToEdit.sire
-              ? FieldsToEdit.sire.map((j) => j.LookupId)
-              : undefined,
+            bbStatus: FieldsToEdit.bbStatus,
           });
         }
       });
@@ -247,8 +299,7 @@ const BBok: React.FC<IPropsBBok> = ({
     if (TagNr === "0") {
       setFormData(undefined);
     }
-  }, [TagNr, ItemsData, SelectedRows]);
-
+  }, [TagNr, ItemsData, SelectedRows, SiresList, AppName, BBIdents]);
   useEffect(() => {
     if (ModeEditing === "WeightAdd") {
       setStatusMessage("LARGE::Weight");
@@ -273,7 +324,6 @@ const BBok: React.FC<IPropsBBok> = ({
       })();
     }
   }, [ItemsWeight, SetItemsWeight, TraceList, BBIdents, TagNr, ModeEditing]);
-
   const SetEditingModeTo = (editingMode: EditingMode): void => {
     if (editingMode !== "None") {
       SetMode("Editing");
@@ -283,7 +333,6 @@ const BBok: React.FC<IPropsBBok> = ({
       SetModeEditing("None");
     }
   };
-
   const [CPStackHorizStyles, CPStackHorizToken] = HorizStack({
     bgColor: ThemeColor.almondCream,
     bordercolor: ThemeColor.peachBeige,
@@ -464,6 +513,15 @@ const BBok: React.FC<IPropsBBok> = ({
                 SetEditingModeTo("WeightAdd");
               }}
             />
+            <Action
+              Name="Sires"
+              IconProps={maleIcon}
+              CurrentMode={Mode}
+              VisibleWhen={["Single"]}
+              Click={() => {
+                SetEditingModeTo("SiresAdd");
+              }}
+            />
             <Stack grow />
             {statusMessage && (
               <div
@@ -512,6 +570,11 @@ const BBok: React.FC<IPropsBBok> = ({
               )}
             </>
           )}
+          {ModeEditing === "SiresAdd" && (
+            <>
+              <SiresAdd BBIdents={BBIdents} />
+            </>
+          )}
         </Stack>
       </form>
       <Stack>
@@ -520,6 +583,7 @@ const BBok: React.FC<IPropsBBok> = ({
             data={ItemsData}
             selectedRows={SelectedRows}
             setSelectedRows={SetSelectedRows}
+            Sires={Sires}
           />
         )}
       </Stack>
@@ -539,6 +603,7 @@ export default function App() {
             <BBok
               BaseList="base"
               TraceList="trace"
+              SiresList="sires"
               AppName="Lammers"
               ResetCount={ResetCount}
               SetResetCount={SetResetCount}

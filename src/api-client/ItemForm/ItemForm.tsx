@@ -12,6 +12,8 @@ import {
   IChoiceGroupStyleProps,
   IChoiceGroupStyles,
   IStyleFunctionOrObject,
+  CheckboxBase,
+  Checkbox,
 } from "@fluentui/react";
 
 import {
@@ -25,8 +27,7 @@ import {
 } from "react";
 import { IBuckDoe } from "Types/BuckDoe";
 import DatePickerStrings from "Interfaces/DatePickerStrings";
-import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
-import IdTagNr from "Interfaces/IdTagNr";
+import IdTagNr from "Interfaces/IBBIdent";
 import { HorizStack } from "Ux/StackHorizontal";
 import ThemeColor from "Ux/ColorScheme";
 import {
@@ -34,6 +35,8 @@ import {
   BBIdentFromTagNr,
   validTagsFor,
 } from "Tools/BBIdent";
+import BaseSiresCreate from "Interfaces/BaseSires";
+import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
 
 const styledisablespinner: Partial<ITextFieldStyles> = {
   fieldGroup: {
@@ -67,7 +70,7 @@ const styleRadioButtons: Partial<
 
 interface IPropsBBDetail {
   formData: TSPListBaseCreate;
-  setFormData: Dispatch<SetStateAction<Partial<TSPListBaseCreate> | undefined>>;
+  setFormData: Dispatch<SetStateAction<Partial<BaseSiresCreate> | undefined>>;
   BBIdents: Array<IdTagNr>;
   SetPageIsValid: Dispatch<SetStateAction<boolean>>;
   setStatusMessage: React.Dispatch<React.SetStateAction<string | undefined>>;
@@ -80,15 +83,13 @@ const ItemForm: FC<IPropsBBDetail> = ({
   SetPageIsValid,
   setStatusMessage,
 }) => {
-  const { damLookupId, dateOfBirth, bbSks, sireLookupId, tagnr, bbWeight } =
-    formData;
+  const { damLookupId, dateOfBirth, bbSks, tagnr, bbWeight } = formData;
 
-  const [sttSireTyping, SetSireTyping] = useState<string | undefined>(
-    sireLookupId
-      ?.map((j) => BBIdentFromItemId(BBIdents, j))
-      .map((j) => j?.TagNr)
-      .join(",")
+  const [bbident] = useState<IdTagNr | undefined>(
+    BBIdentFromTagNr(BBIdents, tagnr)
   );
+
+  const [sttSireTyping, SetSireTyping] = useState<string | undefined>();
   const [sttValidateSireIds, SetValidateSireIds] = useState<boolean>(true);
 
   const [sttTagnrErrMsg, SetTagNrErrMsg] = useState<string | undefined>();
@@ -241,21 +242,12 @@ const ItemForm: FC<IPropsBBDetail> = ({
     }
   };
 
-  const onKeyUpSire = (ev: React.KeyboardEvent) => {
+  const onKeyUpSires = (ev: React.KeyboardEvent) => {
     if (ev.key === "Backspace" && sttSireTyping?.length === 1) {
       SetSireTyping(undefined);
     }
-    // if (ev.key === "," && sttSireTyping) {
-    //   validateSireIdents(sttSireTyping);
-    // } else {
-    //   if (ev.key === " ") {
-    //     SetSireErrMsg("Space not allowed");
-    //   } else {
-    //     SetSireErrMsg("");
-    //   }
-    // }
   };
-  const onBlurSire = () => {
+  const onBlurSires = () => {
     const sireItemIds = validateSireIdents(sttSireTyping);
 
     if (sireItemIds === undefined || sireItemIds.length !== 0)
@@ -266,31 +258,13 @@ const ItemForm: FC<IPropsBBDetail> = ({
         };
       });
   };
-  const handleSireChange = (
+  const handleSiresChange = (
     ev: FormEvent<HTMLInputElement | HTMLTextAreaElement>,
     value: string
   ) => {
     if (value) {
       console.log(value);
       SetSireTyping(value.replace(" ", ","));
-      // const bbident = BBIdentFromTagNr(BBIdents, value);
-      // if (bbident && bbident.Sks === "Buck") {
-      //   setFormData((pV) => {
-      //     return {
-      //       ...pV,
-      //       sireLookupId: bbident.ItemId,
-      //     };
-      //   });
-      //   SetSireErrMsg("");
-      //   setStatusMessage("");
-      // } else {
-      //   setStatusMessage(
-      //     `Valid TagNrs (Buck): [${validTagsFor(BBIdents, "Buck")
-      //       ?.map((j) => j.TagNr)
-      //       .join(",")}]`
-      //   );
-      //   SetSireErrMsg(`Not Valid`);
-      // }
     } else {
       setFormData((pV) => {
         return {
@@ -335,6 +309,17 @@ const ItemForm: FC<IPropsBBDetail> = ({
           // disabled={formData.tagnr !== "0"}
         />
         <ChoiceGroup
+          label="Active"
+          selectedKey={bbSks}
+          onChange={handleBuckDoeChange}
+          options={[
+            { key: "Buck", text: "Buck" },
+            { key: "Doe", text: "Doe" },
+          ]}
+          styles={styleRadioButtons}
+          onBlur={() => Validate()}
+        />
+        <ChoiceGroup
           label="bbSks"
           selectedKey={bbSks}
           onChange={handleBuckDoeChange}
@@ -362,7 +347,7 @@ const ItemForm: FC<IPropsBBDetail> = ({
           disabled={!dateOfBirth}
           onBlur={() => Validate()}
         />
-        {formData.tagnr === "0" && (
+        {bbident && (
           <TextField
             label="Weight"
             name="bbWeight"
@@ -379,19 +364,9 @@ const ItemForm: FC<IPropsBBDetail> = ({
                 };
               });
             }}
+            disabled
           />
         )}
-        <TextField
-          label="Sire"
-          name="sire"
-          onChange={handleSireChange}
-          type="text"
-          value={sttSireTyping} //BBIdentFromItemId(BBIdents, sireLookupId)?.TagNr
-          errorMessage={sttSireErrMsg}
-          styles={styledisablespinner}
-          onBlur={() => onBlurSire()}
-          onKeyUp={(ev) => onKeyUpSire(ev)}
-        />
         <TextField
           label="Dam"
           name="dam"

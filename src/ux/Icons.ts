@@ -13,6 +13,12 @@ export const stepIcon: IIconProps = {
     root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
+export const maleIcon: IIconProps = {
+  iconName: "iconMale",
+  styles: {
+    root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
+  }, // Custom styles for the icon
+};
 export const cancelIcon: IIconProps = {
   iconName: "iconCancel",
   styles: {

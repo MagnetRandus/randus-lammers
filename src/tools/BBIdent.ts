@@ -1,5 +1,5 @@
 import { TableRowId } from "@fluentui/react-table";
-import IBBIdent from "Interfaces/IdTagNr";
+import IBBIdent from "Interfaces/IBBIdent";
 import { IBuckDoe } from "Types/BuckDoe";
 
 export function BBIdentToItemId(selectedRows: Set<TableRowId>, BBIdent: IBBIdent[]): number | undefined {

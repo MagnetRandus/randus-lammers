@@ -3,12 +3,16 @@ import {
   TableCellLayout,
   TableColumnDefinition,
 } from "@fluentui/react-table";
+import SiresFor from "Client/Sires/Sires";
+import IBBIdent from "Interfaces/IBBIdent";
 import { TSPListBaseReadItem } from "Interfaces/LISTS/base/IGraphListItemCustomField";
+import ThemeColor from "Ux/ColorScheme";
 
 type ItemType = TSPListBaseReadItem;
 
 function CreateItemColumns(
-  dataFlat: Array<Partial<ItemType>>
+  dataFlat: Array<Partial<ItemType>>,
+  Sires: Map<number, IBBIdent[]> | undefined
 ): Array<TableColumnDefinition<ItemType>> {
   return [
     createTableColumn<ItemType>({
@@ -24,7 +28,31 @@ function CreateItemColumns(
         );
       },
       renderCell(item) {
-        return <TableCellLayout>{item.tagnr}</TableCellLayout>;
+        return (
+          <TableCellLayout>
+            <span>{item.tagnr}</span>
+          </TableCellLayout>
+        );
+      },
+    }),
+    createTableColumn<ItemType>({
+      columnId: "bbStatus",
+      compare: (a, b) => {
+        return a.bbStatus.localeCompare(b.bbStatus);
+      },
+      renderHeaderCell() {
+        return (
+          <>
+            <b>Status</b>
+          </>
+        );
+      },
+      renderCell(item) {
+        return (
+          <TableCellLayout>
+            <span>{item.bbStatus}</span>
+          </TableCellLayout>
+        );
       },
     }),
     createTableColumn<ItemType>({
@@ -51,7 +79,7 @@ function CreateItemColumns(
         if (item.dateOfBirth) {
           return (
             <TableCellLayout>
-              {new Date(item.dateOfBirth).toLocaleDateString()}
+              <span>{new Date(item.dateOfBirth).toLocaleDateString()}</span>
             </TableCellLayout>
           );
         }
@@ -71,7 +99,11 @@ function CreateItemColumns(
         );
       },
       renderCell(item) {
-        return <TableCellLayout>{item.bbSks}</TableCellLayout>;
+        return (
+          <TableCellLayout>
+            <span>{item.bbSks}</span>
+          </TableCellLayout>
+        );
       },
     }),
     createTableColumn<ItemType>({
@@ -87,29 +119,29 @@ function CreateItemColumns(
         );
       },
       renderCell(item) {
-        return <TableCellLayout>{item.bbWeight}</TableCellLayout>;
+        return (
+          <TableCellLayout>
+            <span>{item.bbWeight}</span>
+          </TableCellLayout>
+        );
       },
     }),
     createTableColumn<ItemType>({
-      columnId: "sire",
-      compare: (a, b) => {
-        if (a.sire === undefined) return 1;
-        if (b.sire === undefined) return -1;
-        return a.sire[0].LookupId - b.sire[0].LookupId;
+      columnId: "sires",
+      compare: () => {
+        return -1;
       },
       renderHeaderCell() {
         return (
           <>
-            <b>Sire</b>
+            <b>Potential Sires</b>
           </>
         );
       },
       renderCell(item) {
         return (
           <TableCellLayout>
-            {item.sire &&
-              item.sire.length !== 0 &&
-              item.sire.flatMap((j) => j.LookupValue).join(",")}
+            <SiresFor ItemId={parseInt(item.id, 10)} Sires={Sires} />
           </TableCellLayout>
         );
       },

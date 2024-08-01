@@ -18,21 +18,27 @@ import {
 import { useState } from "react";
 import CreateItemColumns from "./Columns";
 import styles from "./Items.module.scss";
+import { TSPLBSireRead } from "Interfaces/LISTS/sires/IGLICF-Sires";
+import IBBIdent from "Interfaces/IBBIdent";
+import ThemeColor from "Ux/ColorScheme";
+
+type ItemTypeBase = TSPListBaseReadItem;
+type ItemTypeSires = TSPLBSireRead;
 
 interface IPropsItems {
   data: Array<TSPListBaseRead>;
   selectedRows: Set<TableRowId>;
   setSelectedRows: React.Dispatch<React.SetStateAction<Set<TableRowId>>>;
+  Sires: Map<number, IBBIdent[]> | undefined;
 }
-
-type ItemType = TSPListBaseReadItem;
 
 const Items: React.FC<IPropsItems> = ({
   data,
+  Sires,
   selectedRows,
   setSelectedRows,
 }) => {
-  const dataFlat = data.flatMap((j) => j.fields) as Partial<ItemType>[];
+  const dataFlat = data.flatMap((j) => j.fields) as Partial<ItemTypeBase>[];
   const onSortChange: DataGridProps["onSortChange"] = (e, nextSortState) => {
     setSortState(nextSortState);
   };
@@ -51,8 +57,10 @@ const Items: React.FC<IPropsItems> = ({
     setSelectedRows(new Set<TableRowId>(rowsSel.selectedItems));
   };
 
-  const columns: Array<TableColumnDefinition<ItemType>> =
-    CreateItemColumns(dataFlat);
+  const columns: Array<TableColumnDefinition<ItemTypeBase>> = CreateItemColumns(
+    dataFlat,
+    Sires
+  );
 
   return (
     <>
@@ -78,9 +86,9 @@ const Items: React.FC<IPropsItems> = ({
               )}
             </DataGridRow>
           </DataGridHeader>
-          <DataGridBody<ItemType>>
+          <DataGridBody<ItemTypeBase>>
             {({ item, rowId }) => (
-              <DataGridRow<ItemType>
+              <DataGridRow<ItemTypeBase>
                 key={rowId}
                 selectionCell={{
                   radioIndicator: { "aria-label": "Select row" },

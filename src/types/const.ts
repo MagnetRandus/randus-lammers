@@ -1,14 +1,14 @@
 import { TableRowId } from "@fluentui/react-table";
-import { TSPListBaseCreate } from "Interfaces/LISTS/base/IGraphListItemCustomField";
+import BaseSiresCreate from "Interfaces/BaseSires";
 import { TSPLBWeightCreate } from "Interfaces/LISTS/trace/IGLICF-Weight";
 
-export const formDefaults: TSPListBaseCreate = {
+export const formDefaults: BaseSiresCreate = {
   tagnr: "0",
   dateOfBirth: new Date(),
   damLookupId: undefined,
-  sire: undefined,
   bbSks: "Buck",
   bbWeight: 0,
+  Sires: undefined,
 };
 export const RELOAD = `!RELOAD!`;
 
