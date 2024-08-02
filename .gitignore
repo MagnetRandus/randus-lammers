@@ -91,3 +91,6 @@ typings/
 # Electron-Forge
 out/
 dist/
+myprog.txt
+concatFiles.ps1
+~$Lammers.xlsx

@@ -11,7 +11,7 @@ const eapi = {
   cloudUpdateItem: <RT, PT>(listname: string, itemId: number, payload: Partial<IGraphListItem<PT>>): Promise<RT> => ipcRenderer.invoke("cloudUpdateItem", listname, itemId, payload),
   cloudGetAllItems: <RT>(listname: string, extString: string): Promise<GraphResponse<RT>> => ipcRenderer.invoke("cloudGetAllItems", listname, extString),
   cloudGetItems: <RT>(listname: string, filter: string, extString: string): Promise<GraphResponse<RT>> => ipcRenderer.invoke("cloudGetItems", listname, filter, extString),
-  cloudDeleteItems: <PT>(listname: string, payload: PT): Promise<undefined> => ipcRenderer.invoke("cloudDeleteItems", listname, payload),
+  cloudDeleteItems: (listname: string, ItemIds: Array<string>): Promise<undefined> => ipcRenderer.invoke("cloudDeleteItems", listname, ItemIds),
   localLogging: (ErrLvl: TErrorLevel, Label: string, Message: string): any => ipcRenderer.send("localLogging", ErrLvl, Label, Message),
 };
 

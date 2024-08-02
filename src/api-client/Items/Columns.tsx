@@ -3,16 +3,19 @@ import {
   TableCellLayout,
   TableColumnDefinition,
 } from "@fluentui/react-table";
-import SiresFor from "Client/Sires/Sires";
+import SiresFor from "Client/Sires/SiresFor";
 import IBBIdent from "Interfaces/IBBIdent";
 import { TSPListBaseReadItem } from "Interfaces/LISTS/base/IGraphListItemCustomField";
-import ThemeColor from "Ux/ColorScheme";
+import { BBIdentFromItemId } from "Tools/BBIdent";
+import { IBBIdents } from "Types/IBBIdents";
+import { ISireIdents } from "Types/ISireIdents";
 
 type ItemType = TSPListBaseReadItem;
 
 function CreateItemColumns(
   dataFlat: Array<Partial<ItemType>>,
-  Sires: Map<number, IBBIdent[]> | undefined
+  SiresMap: Map<IBBIdent, ISireIdents | undefined>,
+  BBIdents: IBBIdents | undefined
 ): Array<TableColumnDefinition<ItemType>> {
   return [
     createTableColumn<ItemType>({
@@ -141,7 +144,12 @@ function CreateItemColumns(
       renderCell(item) {
         return (
           <TableCellLayout>
-            <SiresFor ItemId={parseInt(item.id, 10)} Sires={Sires} />
+            {SiresMap && (
+              <SiresFor
+                IbbIdent={BBIdentFromItemId(BBIdents, item.id)}
+                Sires={SiresMap}
+              />
+            )}
           </TableCellLayout>
         );
       },

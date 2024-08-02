@@ -31,6 +31,7 @@ import {
   CancelIcon,
   ClearSelectionIcon,
   DeleteIcon,
+  DuststormIcon,
   FlagIcon,
   MedicalIcon,
   SaveAsIcon,
@@ -50,6 +51,7 @@ import {
   deletelIcon,
   maleIcon,
   medicalIcon,
+  noneIcon,
   saveIcon,
   stepIcon,
   updateIcon,
@@ -65,9 +67,14 @@ import {
 } from "Tools/BBIdent";
 import Items from "Client/Items/Items";
 import { StackGenericStyles, stackGenericToken } from "Ux/StackGeneric";
-import BaseSiresCreate from "Interfaces/BaseSires";
-import { TSPLBSireRead } from "Interfaces/LISTS/sires/IGLICF-Sires";
+import {
+  TSPLBSireCreate,
+  TSPLBSireRead,
+} from "Interfaces/LISTS/sires/IGLICF-Sires";
 import SiresAdd from "Client/Sires/SireAdd";
+import SireReadToIdent from "Tools/SireIdent";
+import { ISireIdents } from "Types/ISireIdents";
+import ISireIdent from "Interfaces/ISireIdent";
 
 initializeIcons();
 registerIcons({
@@ -82,6 +89,7 @@ registerIcons({
     iconstep: <StepIcon />,
     iconmedical: <MedicalIcon />,
     iconMale: <FlagIcon />,
+    iconNone: <DuststormIcon />,
   },
 });
 
@@ -117,10 +125,6 @@ const BBok: React.FC<IPropsBBok> = ({
   const [TagNr, SetTagNr] = useState<string>("0");
   const [BBIdents, SetBBIdents] = useState<Array<IBBIdent> | undefined>();
 
-  const [Sires, SetSires] = useState<
-    Map<number, Array<IBBIdent>> | undefined
-  >();
-
   const [ItemsData, setItemsData] = useState<
     Array<TSPListBaseRead> | undefined
   >();
@@ -134,6 +138,14 @@ const BBok: React.FC<IPropsBBok> = ({
   const [ItemsWeight, SetItemsWeight] = useState<
     TSPLBWeightRead[] | undefined
   >();
+
+  const [Sires, SetSires] = useState<Set<ISireIdent>>(new Set());
+
+  const [ConfirmDelete, SetConfirmDelete] = useState<boolean>(false);
+
+  const [SiresMap, setSiresMap] = useState<
+    Map<IBBIdent, ISireIdents | undefined>
+  >(new Map());
 
   useEffect(() => {
     if (ResetCount >= 1) {
@@ -181,6 +193,7 @@ const BBok: React.FC<IPropsBBok> = ({
   useEffect(() => {
     if (SelectedRows.has(0)) SelectedRows.delete(0);
     if (ItemsData) {
+      SetConfirmDelete(false);
       if (SelectedRows.size === 1) {
         SetMode("Single");
         if (BBIdents) {
@@ -208,6 +221,7 @@ const BBok: React.FC<IPropsBBok> = ({
       setStatusMessage(AppName);
       setStatusMessageTitle(`Welcome to ${AppName}`);
       SetResetCount((pV) => pV + 1);
+      SetSires(new Set());
     } else if (BBIdents && BBIdents.length !== 0) {
       setStatusMessage(
         BBIdentFromSelectedRows(BBIdents, SelectedRows)
@@ -236,6 +250,15 @@ const BBok: React.FC<IPropsBBok> = ({
               FormDefaultsWeightInit(BBIdentToItemId(SelectedRows, BBIdents))
             );
           }
+          if (ModeEditing === "SiresAdd") {
+            const bbident = BBIdentFromTagNr(BBIdents, TagNr);
+            if (bbident) {
+              const sireMap = SiresMap.get(bbident);
+              if (sireMap) {
+                SetSires(new Set(Array.from(sireMap)));
+              }
+            }
+          }
           break;
       }
     }
@@ -254,27 +277,22 @@ const BBok: React.FC<IPropsBBok> = ({
         )
         .then((res) => {
           if (res) {
-            const sireP = new Map<number, Array<IBBIdent>>();
-
-            if (BBIdents)
+            if (BBIdents) {
               BBIdents.forEach((bbIdent) => {
-                const sires = res.value.filter(
-                  (j) => parseInt(j.fields.bbRef, 10) === bbIdent.ItemId
+                const sires = SireReadToIdent(res.value, BBIdents)?.filter(
+                  (j) => j.bb.ItemId === bbIdent.ItemId
                 );
 
-                if (sires.length !== 0) {
-                  const siresItemIds = sires.map((j) => j.fields.sireRef);
-                  const sireIdents = siresItemIds.flatMap((sireItemId) =>
-                    BBIdents.filter(
-                      (bbident) => bbident.ItemId === parseInt(sireItemId, 10)
-                    )
-                  );
-                  if (sireIdents.length > 0) {
-                    sireP.set(bbIdent.ItemId, sireIdents);
-                  }
+                if (sires && sires.length !== 0) {
+                  setSiresMap((prevMap) => {
+                    // Create a new Map based on the previous one to ensure immutability
+                    const newMap = new Map(prevMap);
+                    newMap.set(bbIdent, sires);
+                    return newMap;
+                  });
                 }
               });
-            SetSires(sireP);
+            }
             setStatusMessageTitle(`Welcome to ${AppName}...`);
           }
         });
@@ -324,6 +342,9 @@ const BBok: React.FC<IPropsBBok> = ({
       })();
     }
   }, [ItemsWeight, SetItemsWeight, TraceList, BBIdents, TagNr, ModeEditing]);
+  useEffect(() => {
+    Sires.size === 0 ? SetPageIsValid(false) : SetPageIsValid(true);
+  }, [SetSires, Sires]);
   const SetEditingModeTo = (editingMode: EditingMode): void => {
     if (editingMode !== "None") {
       SetMode("Editing");
@@ -353,35 +374,42 @@ const BBok: React.FC<IPropsBBok> = ({
             <Action
               Name="Clear"
               IconProps={clearFilterIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               HiddenWhen={["Editing"]}
               VisibleWhen={["Single", "Multiple"]}
               Click={() => {
                 SetSelectedRows(rowDefaultSelection);
               }}
+              Title="Clear selection"
             />
             <Action
               Name="Add"
               IconProps={addIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               VisibleWhen={["None"]}
               Click={() => {
                 SetEditingModeTo("ItemAdd");
               }}
+              Title="Add an item"
             />
             <Action
               Name="Edit"
               IconProps={updateIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               VisibleWhen={["Single"]}
               Click={() => {
                 SetEditingModeTo("ItemEdit");
               }}
+              Title="Edit selected item"
             />
             <Action
               Name="Save"
               IconProps={saveIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               VisibleWhen={["Editing"]}
               Click={(ev) => {
                 ev.preventDefault();
@@ -471,56 +499,188 @@ const BBok: React.FC<IPropsBBok> = ({
 
                     /** Add Weight to Trace */
                   }
+
+                  if (ModeEditing === "SiresAdd") {
+                    (async () => {
+                      const ibbident = BBIdentFromTagNr(BBIdents, TagNr);
+
+                      if (ibbident) {
+                        const sires = SiresMap.get(ibbident);
+
+                        if (sires && sires.length !== 0) {
+                          const sireRefsIds = sires.map((j) => j.ItemId);
+
+                          window.eapi.localLogging(
+                            "Info",
+                            `Delete-${SiresList}`,
+                            JSON.stringify(sireRefsIds)
+                          );
+
+                          await window.eapi.cloudDeleteItems(
+                            SiresList,
+                            sireRefsIds
+                          );
+                          window.eapi.localLogging(
+                            "Info",
+                            `Delete-Success`,
+                            JSON.stringify(sireRefsIds)
+                          );
+                        }
+
+                        for await (const sireIdent of Sires.values()) {
+                          try {
+                            window.eapi.localLogging(
+                              "Info",
+                              "Linked Sire",
+                              `${sireIdent.sire.ItemId} as sire to: ${sireIdent.bb.ItemId}`
+                            );
+                            await window.eapi.cloudCreateItem<
+                              TSPLBSireRead,
+                              TSPLBSireCreate
+                            >(SiresList, {
+                              fields: {
+                                bbRefLookupId: ibbident.ItemId.toString(),
+                                sireRefLookupId:
+                                  sireIdent.sire.ItemId.toString(),
+                              },
+                            });
+                          } catch (error) {
+                            window.eapi.localLogging(
+                              "Error",
+                              "SireCreate",
+                              `Could not create: ${JSON.stringify(sireIdent)}`
+                            );
+                          }
+                        }
+                        SetSires(new Set());
+                        SetEditingModeTo("None");
+                      }
+                    })();
+                  }
                 })();
               }}
               IsDisabled={!PageIsValid}
+              Title="Save changes"
             />
             <Action
               Name="Cancel"
               IconProps={cancelIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               VisibleWhen={["Editing"]}
               Click={() => {
                 SetMode("None");
-                console.dir(ItemsWeight);
               }}
+              Title="Cancel"
             />
             <Action
-              Name="Delete"
-              IconProps={deletelIcon}
-              CurrentMode={Mode}
-              HiddenWhen={["Editing"]}
-              VisibleWhen={["Single", "Multiple"]}
+              Name="None"
+              IconProps={noneIcon}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
+              VisibleWhen={["Editing"]}
+              SpecificMode={["SiresAdd"]}
               Click={() => {
-                //
+                (async () => {
+                  const ibbident = BBIdentFromTagNr(BBIdents, TagNr);
+                  if (ibbident) {
+                    const sireRefsIds = SiresMap.get(ibbident)?.map(
+                      (j) => j.ItemId
+                    );
+                    if (sireRefsIds) {
+                      window.eapi.localLogging(
+                        "Info",
+                        `Delete-ClearSires-${SiresList}`,
+                        JSON.stringify(sireRefsIds)
+                      );
+
+                      await window.eapi.cloudDeleteItems(
+                        SiresList,
+                        sireRefsIds
+                      );
+
+                      window.eapi.localLogging(
+                        "Info",
+                        `Delete-ClearSires-Success`,
+                        JSON.stringify(sireRefsIds)
+                      );
+
+                      setStatusMessage(`Sires removed`);
+                      SetMode("None");
+                    }
+                  }
+                })();
               }}
+              Title="Permanantly unlink these sires"
             />
+            {BBIdents && (
+              <Action
+                Name="Delete"
+                IconProps={deletelIcon}
+                CurrentSelectMode={Mode}
+                CurrentEditMode={ModeEditing}
+                HiddenWhen={["Editing"]}
+                VisibleWhen={["Single", "Multiple"]}
+                Click={() => {
+                  const bbidentsFromSelection = BBIdentFromSelectedRows(
+                    BBIdents,
+                    SelectedRows
+                  );
+                  const delIds = bbidentsFromSelection.map((j) =>
+                    j.ItemId.toString()
+                  );
+                  if (!ConfirmDelete) {
+                    const msgDeleteSelected = bbidentsFromSelection
+                      .map((j) => j.TagNr)
+                      .join(",");
+                    setStatusMessage(`Confirm delete: ${msgDeleteSelected}`);
+                    alert(
+                      `To confirm deletion, click Delete again to delete these tags: [${msgDeleteSelected}]`
+                    );
+                    SetConfirmDelete(true);
+                  } else {
+                    if (delIds && delIds.length) {
+                      window.eapi.cloudDeleteItems(BaseList, delIds);
+                    }
+                    SetConfirmDelete(false);
+                    SetMode("None");
+                  }
+                }}
+                Title="Delete this items (you can't undo this)"
+              />
+            )}
             <Action
               Name="Meds"
               IconProps={medicalIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               VisibleWhen={["Single"]}
               Click={() => {
                 SetEditingModeTo("MedicationAdd");
               }}
+              Title="Provide details about medication"
             />
             <Action
               Name="Weight"
               IconProps={stepIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               VisibleWhen={["Single"]}
               Click={() => {
                 SetEditingModeTo("WeightAdd");
               }}
+              Title="Capture weight data"
             />
             <Action
               Name="Sires"
               IconProps={maleIcon}
-              CurrentMode={Mode}
+              CurrentSelectMode={Mode}
+              CurrentEditMode={ModeEditing}
               VisibleWhen={["Single"]}
               Click={() => {
                 SetEditingModeTo("SiresAdd");
               }}
+              Title="Managed Sired-by information"
             />
             <Stack grow />
             {statusMessage && (
@@ -571,8 +731,16 @@ const BBok: React.FC<IPropsBBok> = ({
             </>
           )}
           {ModeEditing === "SiresAdd" && (
+            //new Map<IBBIdent, IBBIdents>().set(BBIdentFromTagNr(BBIdents,TagNr), [])
             <>
-              <SiresAdd BBIdents={BBIdents} />
+              {BBIdents && TagNr !== "0" && (
+                <SiresAdd
+                  BB={BBIdentFromTagNr(BBIdents, TagNr)}
+                  BBIdents={BBIdents}
+                  Sires={Sires}
+                  SetSires={SetSires}
+                />
+              )}
             </>
           )}
         </Stack>
@@ -580,10 +748,11 @@ const BBok: React.FC<IPropsBBok> = ({
       <Stack>
         {ItemsData && ModeEditing !== "WeightAdd" && (
           <Items
-            data={ItemsData}
+            data={ItemsData.filter((j) => j.fields.tagnr !== "0")}
             selectedRows={SelectedRows}
             setSelectedRows={SetSelectedRows}
-            Sires={Sires}
+            BBIdents={BBIdents}
+            SiresMap={SiresMap}
           />
         )}
       </Stack>

@@ -13,31 +13,37 @@ export function BBIdentFromSelectedRows(BBIdent: IBBIdent[], selectedRows: Set<T
   return BBIdent.filter((j) => Array.from(selectedRows.values()).includes(j.TagNr));
 }
 
-export function BBIdentFromTagNr(BBIdents: IBBIdent[], TagNr: string): IBBIdent | undefined {
-  return BBIdents[
-    BBIdents.findIndex((j) => {
-      return j.TagNr === TagNr;
-    })
-  ];
+export function BBIdentFromTagNr(BBIdents: IBBIdent[] | undefined, TagNr: string): IBBIdent | undefined {
+  if (BBIdents) {
+    return BBIdents[
+      BBIdents.findIndex((j) => {
+        return j.TagNr === TagNr;
+      })
+    ];
+  }
+  return undefined;
 }
 
-export function BBIdentFromItemId(BBIdents: IBBIdent[], ItemId: string | number | undefined): IBBIdent | undefined {
-  if (typeof ItemId === "number") {
-    console.log(`ItemId is a number`);
-    return BBIdents[
-      BBIdents.findIndex((j) => {
-        return j.ItemId === ItemId;
-      })
-    ];
+export function BBIdentFromItemId(BBIdents: IBBIdent[] | undefined, ItemId: string | number | undefined): IBBIdent | undefined {
+  if (BBIdents && BBIdents.length > 0) {
+    if (typeof ItemId === "number") {
+      window.eapi.localLogging("Error", "BBIdentFromItemId", "ItemId is a number");
+      return BBIdents[
+        BBIdents.findIndex((j) => {
+          return j.ItemId === ItemId;
+        })
+      ];
+    }
+    if (typeof ItemId === "string") {
+      return BBIdents[
+        BBIdents.findIndex((j) => {
+          return j.ItemId === parseInt(ItemId);
+        })
+      ];
+    }
   }
-  if (typeof ItemId === "string") {
-    console.log(`ItemId is a string`);
-    return BBIdents[
-      BBIdents.findIndex((j) => {
-        return j.ItemId === parseInt(ItemId);
-      })
-    ];
-  }
+
+  window.eapi.localLogging("Info", "BBIdentFromItemId", "BBIdents was undefined");
 
   return undefined;
 }

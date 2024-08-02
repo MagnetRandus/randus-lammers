@@ -9,6 +9,7 @@ export const formDefaults: BaseSiresCreate = {
   bbSks: "Buck",
   bbWeight: 0,
   Sires: undefined,
+  bbStatus: "Alive",
 };
 export const RELOAD = `!RELOAD!`;
 

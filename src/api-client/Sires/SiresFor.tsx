@@ -1,14 +1,15 @@
 import IBBIdent from "Interfaces/IBBIdent";
+import { ISireIdents } from "Types/ISireIdents";
 import ThemeColor from "Ux/ColorScheme";
 
 interface IPropsABC {
-  ItemId: number;
-  Sires: Map<number, IBBIdent[]> | undefined;
+  IbbIdent: IBBIdent | undefined;
+  Sires: Map<IBBIdent, ISireIdents | undefined>;
 }
 
-const SiresFor: React.FC<IPropsABC> = ({ ItemId, Sires }) => {
-  if (Sires) {
-    const siresfor = Sires.get(ItemId);
+const SiresFor: React.FC<IPropsABC> = ({ IbbIdent, Sires }) => {
+  if (Sires && IbbIdent) {
+    const siresfor = Sires.get(IbbIdent);
     if (siresfor) {
       return (
         <div>
@@ -22,7 +23,7 @@ const SiresFor: React.FC<IPropsABC> = ({ ItemId, Sires }) => {
               }}
               key={j.ItemId}
             >
-              {j.TagNr}
+              {j.sire.TagNr}
             </div>
           ))}
         </div>

@@ -18,25 +18,26 @@ import {
 import { useState } from "react";
 import CreateItemColumns from "./Columns";
 import styles from "./Items.module.scss";
-import { TSPLBSireRead } from "Interfaces/LISTS/sires/IGLICF-Sires";
+import { IBBIdents } from "Types/IBBIdents";
 import IBBIdent from "Interfaces/IBBIdent";
-import ThemeColor from "Ux/ColorScheme";
+import { ISireIdents } from "Types/ISireIdents";
 
 type ItemTypeBase = TSPListBaseReadItem;
-type ItemTypeSires = TSPLBSireRead;
 
 interface IPropsItems {
   data: Array<TSPListBaseRead>;
   selectedRows: Set<TableRowId>;
   setSelectedRows: React.Dispatch<React.SetStateAction<Set<TableRowId>>>;
-  Sires: Map<number, IBBIdent[]> | undefined;
+  BBIdents: IBBIdents | undefined;
+  SiresMap: Map<IBBIdent, ISireIdents | undefined>;
 }
 
 const Items: React.FC<IPropsItems> = ({
   data,
-  Sires,
   selectedRows,
   setSelectedRows,
+  BBIdents,
+  SiresMap,
 }) => {
   const dataFlat = data.flatMap((j) => j.fields) as Partial<ItemTypeBase>[];
   const onSortChange: DataGridProps["onSortChange"] = (e, nextSortState) => {
@@ -59,7 +60,8 @@ const Items: React.FC<IPropsItems> = ({
 
   const columns: Array<TableColumnDefinition<ItemTypeBase>> = CreateItemColumns(
     dataFlat,
-    Sires
+    SiresMap,
+    BBIdents
   );
 
   return (

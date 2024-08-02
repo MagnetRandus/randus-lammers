@@ -12,8 +12,10 @@ import {
   IChoiceGroupStyleProps,
   IChoiceGroupStyles,
   IStyleFunctionOrObject,
-  CheckboxBase,
-  Checkbox,
+  DropdownBase,
+  IDropdownOption,
+  IDropdownStyleProps,
+  IDropdownStyles,
 } from "@fluentui/react";
 
 import {
@@ -54,6 +56,9 @@ const styledisablespinner: Partial<ITextFieldStyles> = {
 const styleRadioButtons: Partial<
   IStyleFunctionOrObject<IChoiceGroupStyleProps, IChoiceGroupStyles>
 > = {
+  root: {
+    marginTop: -5,
+  },
   flexContainer: {
     display: "flex",
     flexDirection: "row", // Ensure the radio buttons are in a row
@@ -65,6 +70,61 @@ const styleRadioButtons: Partial<
         marginRight: "10px", // Add additional margin for spacing
       },
     },
+  },
+};
+
+const dropdownStyles: IStyleFunctionOrObject<
+  IDropdownStyleProps,
+  IDropdownStyles
+> = {
+  root: {
+    display: "inline-block",
+    width: 125,
+  },
+  label: {
+    // width: "100%", // Adjust the width as needed
+    display: "block",
+    marginBottom: "8px", // Add some space between the label and the dropdown
+  },
+  dropdown: {
+    // width: "100%",
+    height: "auto",
+    backgroundColor: ThemeColor.almondCreamLight,
+    border: `1px solid ${ThemeColor.desertTan}`,
+    padding: "5px",
+    "margin-top": "-7px",
+    selectors: {
+      ":hover": { cursor: "pointer" },
+
+      ".ms-Dropdown-title": {
+        height: "32px",
+        lineHeight: "32px",
+        padding: "0 12px",
+      },
+      ".ms-Dropdown-caretDownWrapper": {
+        height: "32px",
+        lineHeight: "32px",
+      },
+      i: {
+        float: "right",
+      },
+    },
+  },
+  dropdownItem: {
+    height: "32px",
+    lineHeight: "32px",
+    padding: "0 12px",
+    display: "block",
+  },
+  dropdownItemSelected: {
+    height: "32px",
+    lineHeight: "32px",
+    padding: "0 12px",
+  },
+  dropdownOptionText: {
+    // width: "100%",
+    height: "32px",
+    lineHeight: "32px",
   },
 };
 
@@ -83,13 +143,13 @@ const ItemForm: FC<IPropsBBDetail> = ({
   SetPageIsValid,
   setStatusMessage,
 }) => {
-  const { damLookupId, dateOfBirth, bbSks, tagnr, bbWeight } = formData;
+  const { damLookupId, dateOfBirth, bbSks, tagnr, bbWeight, bbStatus } =
+    formData;
 
   const [bbident] = useState<IdTagNr | undefined>(
     BBIdentFromTagNr(BBIdents, tagnr)
   );
 
-  const [sttSireTyping, SetSireTyping] = useState<string | undefined>();
   const [sttValidateSireIds, SetValidateSireIds] = useState<boolean>(true);
 
   const [sttTagnrErrMsg, SetTagNrErrMsg] = useState<string | undefined>();
@@ -100,43 +160,6 @@ const ItemForm: FC<IPropsBBDetail> = ({
   useEffect(() => {
     if (sttValidateSireIds) SetSireErrMsg("");
   }, [sttValidateSireIds, SetValidateSireIds]);
-
-  const validateSireIdents = (
-    v: string | undefined
-  ): Array<number> | undefined => {
-    let sirelookupids: Array<number> | undefined = undefined;
-
-    const sirelookupidsInvalid: Array<string> = [];
-
-    SetValidateSireIds(true);
-
-    if (v) {
-      sirelookupids = v
-        .split(",")
-        .map((JTagNr) => {
-          const J = BBIdentFromTagNr(BBIdents, JTagNr);
-          if (J) {
-            if (J.Sks !== "Buck")
-              sirelookupidsInvalid.push(`${JTagNr}-${J.Sks}`);
-          } else {
-            sirelookupidsInvalid.push(`${JTagNr}-Unknown`);
-          }
-
-          if (sirelookupidsInvalid.length !== 0) {
-            SetSireErrMsg(`Tag Error: ${sirelookupidsInvalid.join(",")}`);
-            SetValidateSireIds(false);
-          }
-
-          return J;
-        })
-        .filter((ident) => ident !== undefined)
-        .map((ident) => ident.ItemId);
-
-      if (sirelookupids.length === 0) sirelookupids = undefined;
-    }
-
-    return sirelookupids;
-  };
 
   const Validate = (): void => {
     const a = sttTagnrErrMsg === undefined || sttTagnrErrMsg === "";
@@ -183,7 +206,16 @@ const ItemForm: FC<IPropsBBDetail> = ({
     }
     Validate();
   };
-
+  const handleStatusChange = (
+    event: FormEvent<HTMLDivElement>,
+    option?: IDropdownOption,
+    index?: number
+  ) => {
+    console.log(`Index: ${index} Options: ${option?.text}`);
+    // setFormData((pV) => {
+    //   return { ...pV, bbSks: option.key as IBuckDoe };
+    // });
+  };
   const handleBuckDoeChange = (
     event: FormEvent<HTMLInputElement>,
     option: IChoiceGroupOption
@@ -242,40 +274,6 @@ const ItemForm: FC<IPropsBBDetail> = ({
     }
   };
 
-  const onKeyUpSires = (ev: React.KeyboardEvent) => {
-    if (ev.key === "Backspace" && sttSireTyping?.length === 1) {
-      SetSireTyping(undefined);
-    }
-  };
-  const onBlurSires = () => {
-    const sireItemIds = validateSireIdents(sttSireTyping);
-
-    if (sireItemIds === undefined || sireItemIds.length !== 0)
-      setFormData((pV) => {
-        return {
-          ...pV,
-          sireLookupId: sireItemIds,
-        };
-      });
-  };
-  const handleSiresChange = (
-    ev: FormEvent<HTMLInputElement | HTMLTextAreaElement>,
-    value: string
-  ) => {
-    if (value) {
-      console.log(value);
-      SetSireTyping(value.replace(" ", ","));
-    } else {
-      setFormData((pV) => {
-        return {
-          ...pV,
-          damLookupId: undefined,
-        };
-      });
-      SetDamErrMsg("");
-    }
-  };
-
   const [StackHorizStyles, stackHorizToken] = HorizStack({
     bgColor: ThemeColor.almondCream,
     bordercolor: ThemeColor.peachBeige,
@@ -284,106 +282,111 @@ const ItemForm: FC<IPropsBBDetail> = ({
     marginBottom: 0,
   });
 
+  const options = new Array<IDropdownOption<string>>();
+  options.push({ key: "Alive", text: "Alive" });
+  options.push({
+    key: "Alive-NP",
+    text: "Alive-NP",
+    title: "Alive (Non-productive)",
+  });
+  options.push({ key: "Dead", text: "Dead" });
+  options.push({ key: "Sold", text: "Sold" });
+
   return (
-    <>
-      <Stack horizontal styles={StackHorizStyles} tokens={stackHorizToken}>
+    <Stack horizontal styles={StackHorizStyles} tokens={stackHorizToken}>
+      <TextField
+        label="Tag Nr"
+        name="tagnr"
+        type="string"
+        value={(() => {
+          return tagnr === "0" ? undefined : tagnr;
+        })()}
+        errorMessage={sttTagnrErrMsg}
+        styles={styledisablespinner}
+        onBlur={(ev) => handleTagNr(ev)}
+        onChange={(ev) => {
+          setFormData((pV) => {
+            return {
+              ...pV,
+              tagnr: (ev.target as HTMLInputElement).value,
+            };
+          });
+        }}
+        autoFocus={formData.tagnr === "0"}
+        // disabled={formData.tagnr !== "0"}
+      />
+      <DropdownBase
+        options={options}
+        label="Status"
+        defaultSelectedKey={options[0].key}
+        defaultValue={bbStatus}
+        onChange={handleStatusChange}
+        styles={dropdownStyles}
+      />
+      <ChoiceGroup
+        label="Sex"
+        selectedKey={bbSks}
+        onChange={handleBuckDoeChange}
+        options={[
+          { key: "Buck", text: "Buck" },
+          { key: "Doe", text: "Doe" },
+        ]}
+        styles={styleRadioButtons}
+        onBlur={() => Validate()}
+      />
+      <DatePicker
+        label="Date of Birth"
+        style={{ width: "190px" }}
+        value={dateOfBirth}
+        onSelectDate={handledobChange}
+        isRequired
+        firstDayOfWeek={DayOfWeek.Sunday}
+        strings={DatePickerStrings}
+        onBlur={() => Validate()}
+      />
+      <TimePicker
+        label="Time of Birth"
+        value={dateOfBirth}
+        onChange={handleTimeChange}
+        disabled={!dateOfBirth}
+        onBlur={() => Validate()}
+      />
+      {bbident && (
         <TextField
-          label="Tag Nr"
-          name="tagnr"
-          type="string"
-          value={(() => {
-            return tagnr === "0" ? undefined : tagnr;
-          })()}
-          errorMessage={sttTagnrErrMsg}
+          label="Weight"
+          name="bbWeight"
+          type="number"
+          value={String(bbWeight)}
+          errorMessage={sttWeightErrMsg}
           styles={styledisablespinner}
-          onBlur={(ev) => handleTagNr(ev)}
-          onChange={(ev) => {
+          onBlur={(ev) => validateWeight(ev)}
+          onChange={(ev: FormEvent<HTMLInputElement>) => {
             setFormData((pV) => {
               return {
                 ...pV,
-                tagnr: (ev.target as HTMLInputElement).value,
+                bbWeight: parseFloat((ev.target as HTMLInputElement).value),
               };
             });
           }}
-          autoFocus={formData.tagnr === "0"}
-          // disabled={formData.tagnr !== "0"}
+          disabled
         />
-        <ChoiceGroup
-          label="Active"
-          selectedKey={bbSks}
-          onChange={handleBuckDoeChange}
-          options={[
-            { key: "Buck", text: "Buck" },
-            { key: "Doe", text: "Doe" },
-          ]}
-          styles={styleRadioButtons}
-          onBlur={() => Validate()}
-        />
-        <ChoiceGroup
-          label="bbSks"
-          selectedKey={bbSks}
-          onChange={handleBuckDoeChange}
-          options={[
-            { key: "Buck", text: "Buck" },
-            { key: "Doe", text: "Doe" },
-          ]}
-          styles={styleRadioButtons}
-          onBlur={() => Validate()}
-        />
-        <DatePicker
-          label="Date of Birth"
-          style={{ width: "190px" }}
-          value={dateOfBirth}
-          onSelectDate={handledobChange}
-          isRequired
-          firstDayOfWeek={DayOfWeek.Sunday}
-          strings={DatePickerStrings}
-          onBlur={() => Validate()}
-        />
-        <TimePicker
-          label="Time of Birth"
-          value={dateOfBirth}
-          onChange={handleTimeChange}
-          disabled={!dateOfBirth}
-          onBlur={() => Validate()}
-        />
-        {bbident && (
-          <TextField
-            label="Weight"
-            name="bbWeight"
-            type="number"
-            value={String(bbWeight)}
-            errorMessage={sttWeightErrMsg}
-            styles={styledisablespinner}
-            onBlur={(ev) => validateWeight(ev)}
-            onChange={(ev: FormEvent<HTMLInputElement>) => {
-              setFormData((pV) => {
-                return {
-                  ...pV,
-                  bbWeight: parseFloat((ev.target as HTMLInputElement).value),
-                };
-              });
-            }}
-            disabled
-          />
-        )}
-        <TextField
-          label="Dam"
-          name="dam"
-          onChange={handleDamChange}
-          type="number"
-          value={BBIdentFromItemId(BBIdents, damLookupId)?.TagNr}
-          errorMessage={sttDamErrMsg}
-          styles={styledisablespinner}
-          onBlur={() => Validate()}
-          onKeyUp={(ev) => {
-            if (ev.key === "Backspace") {
-              (ev.target as HTMLInputElement).value = "undefined";
-            }
-          }}
-        />
-      </Stack>
-    </>
+      )}
+      <TextField
+        label="Dam"
+        name="dam"
+        onChange={handleDamChange}
+        type="number"
+        value={BBIdentFromItemId(BBIdents, damLookupId)?.TagNr}
+        errorMessage={sttDamErrMsg}
+        styles={styledisablespinner}
+        onBlur={() => Validate()}
+        onKeyUp={(ev) => {
+          if (ev.key === "Backspace") {
+            (ev.target as HTMLInputElement).value = "undefined";
+          }
+        }}
+      />
+    </Stack>
   );
 };
 

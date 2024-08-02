@@ -11,6 +11,6 @@ export type TSPLBSireRead = IGraphListItem<FieldsCustom<IGCLICFSires>>; //has co
 export type TSPLBSireReadItem = FieldsCustom<IGCLICFSires>;
 
 type TSPListBaseA<T> = Omit<T, "bbRef" | "sireRef">;
-type TSPListBaseAA<T> = TSPListBaseA<T> & { bbRefLookupId: number | undefined; sireRef: number | undefined };
+type TSPListBaseAA<T> = TSPListBaseA<T> & { bbRefLookupId: string | undefined; sireRefLookupId: string | undefined };
 
 export type TSPLBSireCreate = TSPListBaseAA<IGCLICFSires>; //Type of Creating an item

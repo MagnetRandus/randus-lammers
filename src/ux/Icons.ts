@@ -25,6 +25,12 @@ export const cancelIcon: IIconProps = {
     root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
   }, // Custom styles for the icon
 };
+export const noneIcon: IIconProps = {
+  iconName: "iconNone",
+  styles: {
+    root: { marginTop: -3, color: ThemeColor.coralOrange, fontSize: 20 },
+  }, // Custom styles for the icon
+};
 export const deletelIcon: IIconProps = {
   iconName: "icondelete",
   styles: {
